@@ -88,9 +88,18 @@
     <p>Chargement des lieux…</p>
   </div>
 
-  <!-- Leaflet -->
+  <!-- ===== ÉCRAN D'ERREUR (si data/lieux.csv introuvable ou mal formaté) ===== -->
+  <div class="error-state" id="errorState" hidden>
+    <p>Impossible de charger les données. Vérifiez que le fichier <code>data/lieux.csv</code> existe bien dans votre dépôt.</p>
+  </div>
+
+</div>
+
+<!-- Leaflet -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  
+<!-- PapaParse — lecture du CSV local (data/lieux.csv) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
 <script src="js/app.js"></script>
 </body>
 </html>
