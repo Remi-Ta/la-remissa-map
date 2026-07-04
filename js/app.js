@@ -1,6 +1,6 @@
 /* =========================================================================
    LA RÉMISSA MAP — app.js
-   Application mobile-first : Google Sheets -> Carte Leaflet + Liste + Recherche
+   Application mobile-first : data/lieux.csv -> Carte Leaflet + Liste + Recherche
    ========================================================================= */
 
 /* ============================================================
@@ -110,7 +110,7 @@ function escapeHtml(str) {
 }
 
 /* ============================================================
-   5. CHARGEMENT DES DONNÉES (Google Sheets -> CSV -> objets)
+   5. CHARGEMENT DES DONNÉES (data/lieux.csv -> objets)
    ============================================================ */
 function loadData() {
   Papa.parse(SHEET_CSV_URL, {
