@@ -21,7 +21,7 @@
    pour "toute personne disposant du lien") — remplacez SHEET_ID et GID :
       https://docs.google.com/spreadsheets/d/SHEET_ID/export?format=csv&gid=GID
    ============================================================ */
-const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1nUi98P-PI_oCzzQU9JSOIxGas_jwmxs3ME_xdEjMXS4/gviz/tq?tqx=out:csv&gid=0";
+const SHEET_CSV_URL = "COLLEZ_ICI_VOTRE_URL_CSV_GOOGLE_SHEETS";
 
 // Centre par défaut de la carte si aucune coordonnée n'est trouvée (Paris)
 const DEFAULT_CENTER = [48.8566, 2.3522];
@@ -88,13 +88,15 @@ function categoryColor(cat) {
   return CATEGORY_COLORS[cat] || DEFAULT_CATEGORY_COLOR;
 }
 
-// Récupère la première URL valide d'une cellule "Photos" (qui peut contenir
-// plusieurs liens séparés par une virgule, un retour à la ligne ou un espace)
+// Récupère la première URL valide d'une cellule "Photos".
+// Formats rencontrés : une URL brute, plusieurs URL séparées par une virgule /
+// un espace / un retour à la ligne, ou le format Softr "nomfichier.png (https://...)".
+// On cherche donc n'importe quelle sous-chaîne commençant par http(s):// dans le texte,
+// peu importe ce qui l'entoure (parenthèses, virgules, etc.).
 function firstPhotoUrl(raw) {
   if (!raw) return null;
-  const parts = raw.split(/[\n, ]+/).map(s => s.trim()).filter(Boolean);
-  const found = parts.find(p => /^https?:\/\//i.test(p));
-  return found || null;
+  const match = raw.match(/https?:\/\/[^\s")]+/i);
+  return match ? match[0] : null;
 }
 
 function escapeHtml(str) {
