@@ -76,7 +76,9 @@ remissa-map/
 │   └── admin.css        # Styles additionnels pour l'admin
 ├── js/
 │   ├── app.js            # Chargement du CSV + logique carte/filtres/recherche/modale
-│   └── admin.js          # Logique du formulaire admin (localStorage, import/export CSV)
+│   ├── admin.js          # Logique du formulaire admin (localStorage, import/export CSV)
+│   └── vendor/
+│       └── papaparse.min.js   # Librairie de lecture CSV, hébergée localement (pas de CDN externe)
 ├── data/
 │   └── lieux.csv         # VOS DONNÉES — à mettre à jour régulièrement
 └── README.md
