@@ -21,7 +21,7 @@
    pour "toute personne disposant du lien") — remplacez SHEET_ID et GID :
       https://docs.google.com/spreadsheets/d/SHEET_ID/export?format=csv&gid=GID
    ============================================================ */
-const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1nUi98P-PI_oCzzQU9JSOIxGas_jwmxs3ME_xdEjMXS4/export?format=csv&gid=0";
+const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTizo65GRmsX9nixb4k-QJgEPIdnIjOmCzE1t9AxWMPGL2WWeMC3ZW-aBQCkhTk6snEhj6xfkaMGIuH/pub?gid=0&single=true&output=csv";
 
 // Centre par défaut de la carte si aucune coordonnée n'est trouvée (Paris)
 const DEFAULT_CENTER = [48.8566, 2.3522];
