@@ -113,6 +113,11 @@ function escapeHtml(str) {
    5. CHARGEMENT DES DONNÉES (data/lieux.csv -> objets)
    ============================================================ */
 function loadData() {
+  if (typeof Papa === "undefined") {
+    showError("La librairie PapaParse ne s'est pas chargée (js/vendor/papaparse.min.js). Vérifiez que ce fichier est bien présent dans votre dépôt.");
+    return;
+  }
+
   Papa.parse(SHEET_CSV_URL, {
     download: true,
     header: true,
