@@ -1,0 +1,466 @@
+/* =========================================================
+   LA RÉMISSA MAP — Feuille de style
+   Palette imposée par la charte Softr existante :
+   - Fond app        : #F8F9FA
+   - Accent principal: #B34E6B (boutons, actifs, modale)
+   Typo : Fraunces (titres, chaleureux) + Inter (texte, très lisible mobile)
+   ========================================================= */
+
+:root {
+  --color-bg: #F8F9FA;
+  --color-surface: #FFFFFF;
+  --color-primary: #B34E6B;
+  --color-primary-dark: #97405a;
+  --color-primary-tint: #f6e9ed;
+  --color-text: #26262b;
+  --color-text-soft: #6b6b74;
+  --color-border: #ECECEF;
+
+  /* Catégories */
+  --cat-manger: #F4B942;
+  --cat-vert: #2ECC71;
+  --cat-emplettes: #A07855;
+  --cat-culture: #3498DB;
+  --cat-experiences: #BB86FC;
+  --cat-schlof: #E91E63;
+  --cat-divers: #4A5568;
+
+  /* Statuts */
+  --status-afaire-bg: #E2E8F0;
+  --status-afaire-text: #475569;
+  --status-approuve-bg: #A7F3D0;
+  --status-approuve-text: #065F46;
+  --status-bof-bg: #FEF3C7;
+  --status-bof-text: #92400E;
+
+  --radius-lg: 20px;
+  --radius-md: 14px;
+  --radius-sm: 10px;
+  --shadow-card: 0 2px 14px rgba(30, 20, 25, 0.07);
+  --shadow-modal: 0 20px 60px rgba(20, 10, 15, 0.25);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  overflow: hidden; /* le scroll se fait dans les vues, pas la page */
+}
+
+button { font-family: inherit; cursor: pointer; }
+input { font-family: inherit; }
+
+#app {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- HEADER ---------- */
+.app-header {
+  padding: 18px 20px 14px;
+  background: linear-gradient(160deg, #fbeef1 0%, #f8f9fa 55%, #f8f9fa 100%);
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+.header-inner { max-width: 720px; margin: 0 auto; }
+.app-title {
+  font-family: 'Fraunces', serif;
+  font-weight: 600;
+  font-size: 26px;
+  margin: 0 0 4px;
+  letter-spacing: -0.01em;
+  color: var(--color-text);
+}
+.app-title span { color: var(--color-primary); }
+.welcome-text {
+  margin: 0;
+  font-size: 14px;
+  color: var(--color-text-soft);
+}
+
+/* ---------- RECHERCHE + FILTRES ---------- */
+.search-panel {
+  padding: 12px 20px 10px;
+  background: var(--color-bg);
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+.search-bar {
+  max-width: 720px;
+  margin: 0 auto 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 11px 16px;
+  box-shadow: var(--shadow-card);
+}
+.icon-search { width: 18px; height: 18px; color: var(--color-text-soft); flex-shrink: 0; }
+.search-bar input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 15px;
+  background: transparent;
+  color: var(--color-text);
+}
+.search-bar input::placeholder { color: #a9a9b2; }
+.clear-btn {
+  border: none;
+  background: var(--color-border);
+  color: var(--color-text-soft);
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font-size: 15px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.chip-scroll {
+  max-width: 720px;
+  margin: 0 auto;
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scrollbar-width: none;
+}
+.chip-scroll::-webkit-scrollbar { display: none; }
+.chip {
+  flex-shrink: 0;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  padding: 7px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: transform .12s ease;
+}
+.chip:active { transform: scale(0.95); }
+.chip .dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+.chip.active {
+  background: var(--color-text);
+  color: #fff;
+  border-color: var(--color-text);
+}
+
+.status-segment {
+  max-width: 720px;
+  margin: 4px auto 0;
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.status-segment::-webkit-scrollbar { display: none; }
+.status-chip {
+  flex-shrink: 0;
+  border: none;
+  padding: 6px 13px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 600;
+  opacity: 0.55;
+  transition: opacity .12s ease, transform .12s ease;
+}
+.status-chip.active { opacity: 1; box-shadow: 0 0 0 2px currentColor inset; }
+.status-chip:active { transform: scale(0.95); }
+
+/* ---------- CONTENU (carte / liste) ---------- */
+.content {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  max-width: 720px;
+  width: 100%;
+  margin: 0 auto;
+}
+.view { display: none; height: 100%; }
+.view.active { display: block; }
+
+#mapView, #map { height: 100%; width: 100%; }
+
+#listView {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 16px 16px calc(90px + var(--safe-bottom));
+}
+.cards-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+@media (min-width: 560px) {
+  .cards-grid { grid-template-columns: 1fr 1fr; }
+}
+
+.empty-state, .error-state {
+  text-align: center;
+  color: var(--color-text-soft);
+  font-size: 14px;
+  margin-top: 40px;
+  padding: 0 20px;
+}
+
+/* ---------- CARTES (fiches lieu) ---------- */
+.place-card {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.place-card:active { transform: scale(0.98); }
+
+.place-card-photo {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  background: linear-gradient(135deg, #f0f0f2, #e6e6ea);
+  display: block;
+}
+.place-card-photo.placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #c3c3ca;
+  font-size: 12px;
+}
+
+.place-card-body { padding: 12px 14px 14px; }
+.place-card-title {
+  font-family: 'Fraunces', serif;
+  font-weight: 600;
+  font-size: 16.5px;
+  margin: 0 0 8px;
+  color: var(--color-text);
+}
+.badge-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+  color: #fff;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+.badge-status {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.place-card-address {
+  font-size: 13px;
+  color: var(--color-text-soft);
+  margin: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+}
+
+/* ---------- NAVIGATION BASSE ---------- */
+.bottom-nav {
+  flex-shrink: 0;
+  display: flex;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
+  padding-bottom: var(--safe-bottom);
+}
+.nav-btn {
+  flex: 1;
+  border: none;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 9px 0 8px;
+  color: var(--color-text-soft);
+  font-size: 12px;
+  font-weight: 600;
+}
+.nav-btn svg { width: 22px; height: 22px; }
+.nav-btn.active { color: var(--color-primary); }
+
+/* ---------- MODALE DE DÉTAILS ---------- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 15, 18, 0.55);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 1000;
+  padding: 0;
+}
+@media (min-width: 560px) {
+  .modal-overlay { align-items: center; padding: 20px; }
+}
+
+.modal {
+  background: var(--color-surface);
+  width: 100%;
+  max-width: 520px;
+  max-height: 88vh;
+  border-radius: 22px 22px 0 0;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: var(--shadow-modal);
+  animation: slideUp .25s ease;
+}
+@media (min-width: 560px) {
+  .modal { border-radius: 22px; }
+}
+@keyframes slideUp {
+  from { transform: translateY(30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.modal-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0,0,0,0.45);
+  color: #fff;
+  font-size: 20px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-photo {
+  width: 100%;
+  aspect-ratio: 16 / 11;
+  object-fit: cover;
+  display: block;
+  background: linear-gradient(135deg, #f0f0f2, #e6e6ea);
+}
+.modal-body { padding: 18px 20px 24px; }
+.modal-title {
+  font-family: 'Fraunces', serif;
+  font-weight: 600;
+  font-size: 21px;
+  margin: 0 0 10px;
+}
+.modal-address {
+  font-size: 14px;
+  color: var(--color-text-soft);
+  margin: 10px 0 2px;
+  display: flex;
+  gap: 6px;
+}
+.modal-date {
+  font-size: 12.5px;
+  color: #a9a9b2;
+  margin: 0 0 14px;
+}
+.modal-description {
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--color-text);
+  white-space: pre-line;
+  margin: 0 0 20px;
+}
+.modal-links {
+  font-size: 13.5px;
+  margin: 0 0 18px;
+}
+.modal-links a { color: var(--color-primary); }
+
+.btn-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  border: none;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 15.5px;
+  font-weight: 700;
+  padding: 15px 20px;
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  transition: background .15s ease;
+}
+.btn-primary:active { background: var(--color-primary-dark); }
+
+/* ---------- MARQUEURS CARTE ---------- */
+.custom-marker span {
+  display: block;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2.5px solid #fff;
+  box-shadow: 0 1px 5px rgba(0,0,0,0.35);
+}
+.leaflet-popup-content-wrapper { border-radius: var(--radius-sm); }
+
+/* ---------- CHARGEMENT / ERREUR ---------- */
+.loading-state, .error-state {
+  position: fixed;
+  inset: 0;
+  background: var(--color-bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  z-index: 2000;
+  color: var(--color-text-soft);
+  font-size: 14px;
+  text-align: center;
+  padding: 0 30px;
+}
+.spinner {
+  width: 34px;
+  height: 34px;
+  border: 3px solid var(--color-border);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Générique catégorie -> couleur, appliqué en inline-style depuis le JS
+   (voir CATEGORY_COLORS dans app.js) mais classes de secours ci-dessous */
+.cat-manger      { background: var(--cat-manger); }
+.cat-vert        { background: var(--cat-vert); }
+.cat-emplettes   { background: var(--cat-emplettes); }
+.cat-culture     { background: var(--cat-culture); }
+.cat-experiences { background: var(--cat-experiences); }
+.cat-schlof      { background: var(--cat-schlof); }
+.cat-divers      { background: var(--cat-divers); }

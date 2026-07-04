@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>La Rémissa Map — Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/admin.css">
+</head>
+<body class="admin-body">
+
+<header class="admin-header">
+  <h1 class="app-title">La Rémissa <span>Admin</span></h1>
+  <p class="welcome-text">Gérez vos lieux, puis téléchargez le CSV et remplacez <code>data/lieux.csv</code> dans votre dépôt GitHub.</p>
+</header>
+
+<main class="admin-main">
+
+  <!-- ===== IMPORT / EXPORT ===== -->
+  <section class="admin-card">
+    <h2>1. Charger des données existantes</h2>
+    <p class="admin-hint">Importez le fichier <code>data/lieux.csv</code> actuel (ou un export Google Sheets) pour continuer à l'éditer.</p>
+    <label class="file-input-label">
+      📂 Importer un fichier CSV
+      <input type="file" id="importFile" accept=".csv" hidden>
+    </label>
+  </section>
+
+  <!-- ===== FORMULAIRE D'AJOUT / ÉDITION ===== -->
+  <section class="admin-card">
+    <h2 id="formTitle">2. Ajouter un lieu</h2>
+    <form id="placeForm" class="admin-form">
+      <input type="hidden" id="editIndex" value="-1">
+
+      <label>Nom du lieu *
+        <input type="text" id="f_nom" required>
+      </label>
+
+      <label>Catégorie *
+        <input type="text" id="f_categorie" list="categoryOptions" required>
+        <datalist id="categoryOptions"></datalist>
+      </label>
+
+      <label>Statut *
+        <input type="text" id="f_statut" list="statusOptions" required>
+        <datalist id="statusOptions"></datalist>
+      </label>
+
+      <label>Adresse
+        <input type="text" id="f_adresse">
+      </label>
+
+      <label>URL Google Maps
+        <input type="url" id="f_urlMaps" placeholder="https://maps.app.goo.gl/...">
+      </label>
+
+      <label>Photos <span class="admin-hint-inline">(une URL, ou "nom.png (URL)")</span>
+        <input type="text" id="f_photos">
+      </label>
+
+      <label>Informations
+        <textarea id="f_infos" rows="3"></textarea>
+      </label>
+
+      <label>Site web
+        <input type="url" id="f_site" placeholder="https://...">
+      </label>
+
+      <label>Date d'ajout
+        <input type="text" id="f_date" placeholder="AAAA-MM-JJ">
+      </label>
+
+      <div class="form-row">
+        <label>Latitude
+          <input type="text" id="f_lat" inputmode="decimal" placeholder="48.8566">
+        </label>
+        <label>Longitude
+          <input type="text" id="f_lng" inputmode="decimal" placeholder="2.3522">
+        </label>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn-primary" id="submitBtn">Ajouter à la liste</button>
+        <button type="button" class="btn-secondary" id="cancelEditBtn" hidden>Annuler la modification</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- ===== LISTE / TABLEAU ===== -->
+  <section class="admin-card">
+    <h2>3. Lieux enregistrés (<span id="countLabel">0</span>)</h2>
+    <p class="admin-hint">Ces données sont sauvegardées automatiquement dans votre navigateur (localStorage) le temps de votre session de travail.</p>
+    <div class="admin-table-wrap">
+      <table class="admin-table" id="placesTable">
+        <thead>
+          <tr>
+            <th>Nom</th><th>Catégorie</th><th>Statut</th><th>Adresse</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="placesTableBody"></tbody>
+      </table>
+    </div>
+    <p class="empty-state" id="adminEmptyState">Aucun lieu pour le moment. Importez un CSV ou ajoutez un lieu ci-dessus.</p>
+  </section>
+
+  <!-- ===== EXPORT ===== -->
+  <section class="admin-card">
+    <h2>4. Exporter vers votre site</h2>
+    <p class="admin-hint">
+      Téléchargez le fichier, puis remplacez <code>data/lieux.csv</code> dans votre dépôt GitHub
+      (sur github.com : ouvrez le fichier, bouton crayon "Edit", collez le contenu — ou glissez-déposez
+      le fichier téléchargé via "Add file &gt; Upload files").
+    </p>
+    <button class="btn-primary" id="exportBtn">⬇️ Télécharger le CSV (lieux.csv)</button>
+    <button class="btn-danger" id="resetBtn">🗑️ Tout effacer</button>
+  </section>
+
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>
