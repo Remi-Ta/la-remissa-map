@@ -13,6 +13,8 @@
 
 <!-- Leaflet.js — carte 100% gratuite et illimitée (fond CartoDB Positron) -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="css/vendor/MarkerCluster.css" />
+<link rel="stylesheet" href="css/vendor/MarkerCluster.Default.css" />
 
 <link rel="stylesheet" href="css/style.css">
 </head>
@@ -82,25 +84,15 @@
     </div>
   </div>
 
-  <!-- ===== ÉCRAN DE CHARGEMENT ===== -->
-  <div class="loading-state" id="loadingState">
-    <div class="spinner"></div>
-    <p>Chargement des lieux…</p>
-  </div>
-
-  <!-- ===== ÉCRAN D'ERREUR (si data/lieux.csv introuvable ou mal formaté) ===== -->
-  <div class="error-state" id="errorState" hidden>
-    <p>Impossible de charger les données. Vérifiez que le fichier <code>data/lieux.csv</code> existe bien dans votre dépôt.</p>
-  </div>
-
 </div>
 
 <!-- Leaflet -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<!-- Clustering de marqueurs, hébergé localement -->
+<script src="js/vendor/leaflet.markercluster.js"></script>
 <!-- PapaParse — lecture du CSV local (data/lieux.csv), hébergé dans ce dépôt (pas de dépendance CDN externe) -->
 <script src="js/vendor/papaparse.min.js"></script>
 
 <script src="js/app.js"></script>
 </body>
 </html>
-
