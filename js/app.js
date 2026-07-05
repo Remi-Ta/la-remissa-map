@@ -145,6 +145,26 @@ function loadData() {
   });
 }
 
+// Transforme une ligne du CSV (colonnes françaises exactes) en objet "place"
+function rowToPlace(row) {
+  const lat = parseFloat((row["Latitude"] || "").toString().replace(",", "."));
+  const lng = parseFloat((row["Longitude"] || "").toString().replace(",", "."));
+
+  return {
+    nom: (row["Nom du lieu"] || "").trim(),
+    categorie: (row["Catégorie"] || "").trim(),
+    statut: (row["Statut"] || "").trim(),
+    adresse: (row["Adresse"] || "").trim(),
+    urlMaps: (row["URL Google Maps"] || "").trim(),
+    photo: firstPhotoUrl(row["Photos"]),
+    infos: (row["Informations"] || "").trim(),
+    site: (row["Site web"] || "").trim(),
+    dateAjout: (row["Date d'ajout"] || "").trim(),
+    lat: Number.isFinite(lat) ? lat : null,
+    lng: Number.isFinite(lng) ? lng : null,
+  };
+}
+
 /* ============================================================
    6. CARTE LEAFLET (fond CartoDB Positron — gratuit et illimité)
    ============================================================ */
