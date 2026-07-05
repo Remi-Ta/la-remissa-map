@@ -55,6 +55,7 @@
   --shadow-card: 0 2px 14px rgba(30, 20, 25, 0.07);
   --shadow-modal: 0 20px 60px rgba(20, 10, 15, 0.25);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --container-max: 1320px; /* largeur max sur grand écran — 720px de trop peu utilisait l'espace desktop */
 }
 
 * { box-sizing: border-box; }
@@ -81,12 +82,20 @@ input { font-family: inherit; }
 
 /* ---------- HEADER ---------- */
 .app-header {
-  padding: 18px 20px 14px;
+  padding: 18px 24px 16px;
   background: linear-gradient(160deg, #fbeef1 0%, #f8f9fa 55%, #f8f9fa 100%);
   border-bottom: 1px solid var(--color-border);
   flex-shrink: 0;
 }
-.header-inner { max-width: 720px; margin: 0 auto; }
+.header-inner { max-width: var(--container-max); margin: 0 auto; }
+
+.header-top-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
 .app-title {
   font-family: 'Fraunces', serif;
   font-weight: 600;
@@ -102,31 +111,129 @@ input { font-family: inherit; }
   color: var(--color-text-soft);
 }
 
-/* ---------- RECHERCHE + FILTRES ---------- */
-.search-panel {
-  padding: 12px 20px 10px;
+/* Nav en haut à droite, avec trait souligné sous l'onglet actif */
+.top-nav {
+  display: flex;
+  gap: 22px;
+  flex-shrink: 0;
+  padding-top: 4px;
+}
+.nav-tab {
+  border: none;
+  background: none;
+  padding: 4px 2px 10px;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--color-text-soft);
+  position: relative;
+}
+.nav-tab.active { color: var(--color-text); }
+.nav-tab.active::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 2.5px;
+  background: var(--color-primary);
+  border-radius: 2px;
+}
+
+/* Bandeau de statistiques */
+.stats-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+}
+.stats-row::-webkit-scrollbar { display: none; }
+.stat-card {
+  flex: 1 1 150px;
+  min-width: 150px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  box-shadow: var(--shadow-card);
+}
+.stat-label {
+  font-size: 12.5px;
+  font-weight: 600;
+  margin: 0 0 6px;
+}
+.stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--color-text);
+  font-family: 'Fraunces', serif;
+}
+
+/* ---------- BARRE D'OUTILS (titre section + recherche + filtres) ---------- */
+.toolbar-panel {
+  padding: 16px 24px;
   background: var(--color-bg);
   border-bottom: 1px solid var(--color-border);
   flex-shrink: 0;
 }
+.toolbar-inner {
+  max-width: var(--container-max);
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.toolbar-heading h2 {
+  font-family: 'Fraunces', serif;
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 2px;
+}
+.toolbar-heading p {
+  font-size: 13px;
+  color: var(--color-text-soft);
+  margin: 0;
+}
+.toolbar-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.filter-select {
+  appearance: none;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface) url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="6" viewBox="0 0 10 6"><path d="M1 1l4 4 4-4" stroke="%236b6b74" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>') no-repeat right 12px center;
+  color: var(--color-text);
+  padding: 9px 30px 9px 14px;
+  border-radius: 999px;
+  font-size: 13.5px;
+  font-weight: 500;
+  box-shadow: var(--shadow-card);
+  max-width: 160px;
+}
+
 .search-bar {
-  max-width: 720px;
-  margin: 0 auto 10px;
+  width: 260px;
+  max-width: 100%;
   display: flex;
   align-items: center;
   gap: 8px;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 999px;
-  padding: 11px 16px;
+  padding: 9px 16px;
   box-shadow: var(--shadow-card);
 }
 .icon-search { width: 18px; height: 18px; color: var(--color-text-soft); flex-shrink: 0; }
 .search-bar input {
   flex: 1;
+  min-width: 0;
   border: none;
   outline: none;
-  font-size: 15px;
+  font-size: 14.5px;
   background: transparent;
   color: var(--color-text);
 }
@@ -135,10 +242,10 @@ input { font-family: inherit; }
   border: none;
   background: var(--color-border);
   color: var(--color-text-soft);
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
-  font-size: 15px;
+  font-size: 14px;
   line-height: 1;
   display: flex;
   align-items: center;
@@ -146,68 +253,19 @@ input { font-family: inherit; }
   flex-shrink: 0;
 }
 
-.chip-scroll {
-  max-width: 720px;
-  margin: 0 auto;
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding-bottom: 8px;
-  scrollbar-width: none;
+@media (max-width: 640px) {
+  .toolbar-inner { flex-direction: column; align-items: stretch; }
+  .toolbar-controls { width: 100%; }
+  .search-bar { width: 100%; }
+  .filter-select { flex: 1; max-width: none; }
 }
-.chip-scroll::-webkit-scrollbar { display: none; }
-.chip {
-  flex-shrink: 0;
-  border: 1px solid var(--color-border);
-  background: var(--color-surface);
-  color: var(--color-text);
-  padding: 7px 14px;
-  border-radius: 999px;
-  font-size: 13px;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  transition: transform .12s ease;
-}
-.chip:active { transform: scale(0.95); }
-.chip .dot {
-  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
-}
-.chip.active {
-  background: var(--color-text);
-  color: #fff;
-  border-color: var(--color-text);
-}
-
-.status-segment {
-  max-width: 720px;
-  margin: 4px auto 0;
-  display: flex;
-  gap: 6px;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-.status-segment::-webkit-scrollbar { display: none; }
-.status-chip {
-  flex-shrink: 0;
-  border: none;
-  padding: 6px 13px;
-  border-radius: 999px;
-  font-size: 12.5px;
-  font-weight: 600;
-  opacity: 0.55;
-  transition: opacity .12s ease, transform .12s ease;
-}
-.status-chip.active { opacity: 1; box-shadow: 0 0 0 2px currentColor inset; }
-.status-chip:active { transform: scale(0.95); }
 
 /* ---------- CONTENU (carte / liste) ---------- */
 .content {
   flex: 1;
   min-height: 0;
   position: relative;
-  max-width: 720px;
+  max-width: var(--container-max);
   width: 100%;
   margin: 0 auto;
 }
@@ -219,15 +277,21 @@ input { font-family: inherit; }
 #listView {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding: 16px 16px calc(90px + var(--safe-bottom));
+  padding: 20px 24px 40px;
 }
 .cards-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 14px;
+  gap: 18px;
 }
 @media (min-width: 560px) {
   .cards-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (min-width: 900px) {
+  .cards-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (min-width: 1250px) {
+  .cards-grid { grid-template-columns: repeat(4, 1fr); }
 }
 
 .empty-state, .error-state {
@@ -251,6 +315,7 @@ input { font-family: inherit; }
 }
 .place-card:active { transform: scale(0.98); }
 
+.place-card-photo-wrap { position: relative; }
 .place-card-photo {
   width: 100%;
   aspect-ratio: 16 / 10;
@@ -264,6 +329,18 @@ input { font-family: inherit; }
   justify-content: center;
   color: #c3c3ca;
   font-size: 12px;
+}
+.card-badges-overlay {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: flex;
+  gap: 5px;
+  max-width: calc(100% - 20px);
+}
+.badge-overflow {
+  background: rgba(255,255,255,0.9) !important;
+  color: var(--color-text) !important;
 }
 
 .place-card-body { padding: 12px 14px 14px; }
@@ -295,35 +372,12 @@ input { font-family: inherit; }
 .place-card-address {
   font-size: 13px;
   color: var(--color-text-soft);
-  margin: 0;
+  margin: 0 0 12px;
   display: flex;
   align-items: flex-start;
   gap: 5px;
 }
-
-/* ---------- NAVIGATION BASSE ---------- */
-.bottom-nav {
-  flex-shrink: 0;
-  display: flex;
-  border-top: 1px solid var(--color-border);
-  background: var(--color-surface);
-  padding-bottom: var(--safe-bottom);
-}
-.nav-btn {
-  flex: 1;
-  border: none;
-  background: transparent;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  padding: 9px 0 8px;
-  color: var(--color-text-soft);
-  font-size: 12px;
-  font-weight: 600;
-}
-.nav-btn svg { width: 22px; height: 22px; }
-.nav-btn.active { color: var(--color-primary); }
+.card-details-btn { font-size: 13.5px; padding: 10px 16px; }
 
 /* ---------- MODALE DE DÉTAILS ---------- */
 .modal-overlay {
@@ -774,29 +828,49 @@ html.admin-page, body.admin-body {
 
 <div id="app">
 
-  <!-- ===== HEADER : titre + message de bienvenue aléatoire ===== -->
+  <!-- ===== HEADER : titre, nav (haut-droite avec soulignement) + stats ===== -->
   <header class="app-header">
     <div class="header-inner">
-      <h1 class="app-title">La Rémissa <span>Map</span></h1>
-      <p class="welcome-text" id="welcomeText">Bienvenue — Tout est prêt</p>
+      <div class="header-top-row">
+        <div class="header-titles">
+          <h1 class="app-title">La Rémissa <span>Map</span></h1>
+          <p class="welcome-text" id="welcomeText">Bienvenue — Tout est prêt</p>
+        </div>
+        <nav class="top-nav" aria-label="Navigation">
+          <button class="nav-tab active" data-view="mapView">Carte</button>
+          <button class="nav-tab" data-view="listView">Liste</button>
+        </nav>
+      </div>
+
+      <!-- Bandeau de statistiques (nombre de lieux par statut + taux d'approbation) -->
+      <div class="stats-row" id="statsRow"></div>
     </div>
   </header>
 
-  <!-- ===== RECHERCHE + FILTRES (barre unique, ouverte) ===== -->
-  <div class="search-panel">
-
-    <div class="search-bar">
-      <svg class="icon-search" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/>
-        <path d="M20 20L16.5 16.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-      </svg>
-      <input type="text" id="searchInput" placeholder="Rechercher un lieu, une adresse, une info…" autocomplete="off" inputmode="search">
-      <button id="clearSearch" class="clear-btn" hidden aria-label="Effacer la recherche">&times;</button>
+  <!-- ===== BARRE D'OUTILS : titre de section + recherche + filtres ===== -->
+  <div class="toolbar-panel">
+    <div class="toolbar-inner">
+      <div class="toolbar-heading">
+        <h2>Tous les lieux</h2>
+        <p>Recherchez, filtrez et ouvrez une fiche pour voir les détails.</p>
+      </div>
+      <div class="toolbar-controls">
+        <select id="categorySelect" class="filter-select" aria-label="Filtrer par catégorie">
+          <option value="all">Catégorie</option>
+        </select>
+        <select id="statusSelect" class="filter-select" aria-label="Filtrer par statut">
+          <option value="all">Statut</option>
+        </select>
+        <div class="search-bar">
+          <svg class="icon-search" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/>
+            <path d="M20 20L16.5 16.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <input type="text" id="searchInput" placeholder="Rechercher un lieu…" autocomplete="off" inputmode="search">
+          <button id="clearSearch" class="clear-btn" hidden aria-label="Effacer la recherche">&times;</button>
+        </div>
+      </div>
     </div>
-
-    <div class="chip-scroll" id="categoryChips" role="tablist" aria-label="Filtrer par catégorie"></div>
-    <div class="status-segment" id="statusSegment" role="tablist" aria-label="Filtrer par statut"></div>
-
   </div>
 
   <!-- ===== CONTENU : Carte ou Liste selon l'onglet actif ===== -->
@@ -813,18 +887,6 @@ html.admin-page, body.admin-body {
 
   </main>
 
-  <!-- ===== NAVIGATION BASSE (mobile-first, style app) ===== -->
-  <nav class="bottom-nav">
-    <button class="nav-btn active" data-view="mapView">
-      <svg viewBox="0 0 24 24" fill="none"><path d="M9 20l-6-2V4l6 2m0 14l6-2m-6 2V6m6 12l6 2V6l-6-2m0 16V4m0 2L9 4" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
-      <span>Carte</span>
-    </button>
-    <button class="nav-btn" data-view="listView">
-      <svg viewBox="0 0 24 24" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.8"/><rect x="13" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.8"/><rect x="4" y="13" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.8"/><rect x="13" y="13" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.8"/></svg>
-      <span>Liste</span>
-    </button>
-  </nav>
-
   <!-- ===== MODALE DE DÉTAILS ===== -->
   <div class="modal-overlay" id="modalOverlay" hidden>
     <div class="modal" role="dialog" aria-modal="true">
@@ -837,6 +899,7 @@ html.admin-page, body.admin-body {
 
 <!-- Leaflet (CDN) -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
 
 <!-- PapaParse (lecture CSV) — intégré directement, plus de fichier séparé -->
 <script>
@@ -991,7 +1054,8 @@ function loadData() {
           .map(rowToPlace)
           .filter(p => p.nom); // on ignore les lignes vides / sans nom
         console.log("[La Rémissa Map] Lieux chargés :", state.allPlaces.length);
-        buildFilterChips();
+        buildFilterSelects();
+        renderStats();
         applyFilters();
         fitMapToPlaces(state.allPlaces); // cadrage initial une seule fois
       } catch (err) {
@@ -1049,6 +1113,15 @@ function categoryBadgesHtml(place) {
   return place.categories
     .map(cat => `<span class="badge" style="background:${categoryColor(cat)}">${escapeHtml(cat)}</span>`)
     .join("");
+}
+
+// Variante pour l'overlay sur la photo des cartes : au-delà de 2 catégories,
+// affiche un badge "+N" plutôt que de surcharger la vignette
+function cardCategoryOverlayHtml(place, maxShown = 2) {
+  const shown = place.categories.slice(0, maxShown);
+  const rest = place.categories.length - shown.length;
+  return shown.map(cat => `<span class="badge" style="background:${categoryColor(cat)}">${escapeHtml(cat)}</span>`).join("")
+    + (rest > 0 ? `<span class="badge badge-overflow">+${rest}</span>` : "");
 }
 
 /* ============================================================
@@ -1167,17 +1240,18 @@ function renderCards(places) {
     const statusStyle = STATUS_STYLES[place.statut] || { bg: "#E2E8F0", text: "#475569" };
 
     card.innerHTML = `
-      ${place.photo
-        ? `<img class="place-card-photo" src="${escapeHtml(place.photo)}" alt="${escapeHtml(place.nom)}" loading="lazy">`
-        : `<div class="place-card-photo placeholder">Pas de photo</div>`
-      }
+      <div class="place-card-photo-wrap">
+        ${place.photo
+          ? `<img class="place-card-photo" src="${escapeHtml(place.photo)}" alt="${escapeHtml(place.nom)}" loading="lazy">`
+          : `<div class="place-card-photo placeholder">Pas de photo</div>`
+        }
+        <div class="card-badges-overlay">${cardCategoryOverlayHtml(place)}</div>
+      </div>
       <div class="place-card-body">
         <h3 class="place-card-title">${escapeHtml(place.nom)}</h3>
-        <div class="badge-row">
-          ${categoryBadgesHtml(place)}
-          ${place.statut ? `<span class="badge badge-status" style="background:${statusStyle.bg};color:${statusStyle.text}">${escapeHtml(place.statut)}</span>` : ""}
-        </div>
+        ${place.statut ? `<div class="badge-row"><span class="badge badge-status" style="background:${statusStyle.bg};color:${statusStyle.text}">${escapeHtml(place.statut)}</span></div>` : ""}
         ${place.adresse ? `<p class="place-card-address">📍 ${escapeHtml(place.adresse)}</p>` : ""}
+        <button type="button" class="btn-primary card-details-btn">↗ Détails</button>
       </div>
     `;
 
@@ -1229,50 +1303,56 @@ function closeModal() {
 /* ============================================================
    9. FILTRES (catégorie + statut) & RECHERCHE OUVERTE
    ============================================================ */
-function buildFilterChips() {
+function buildFilterSelects() {
   // Toutes les catégories réellement présentes (chaque lieu peut en avoir
   // plusieurs), aplaties et dédupliquées, dans l'ordre de la charte
   const allTags = [...new Set(state.allPlaces.flatMap(p => p.categories))];
   const presentCategories = CATEGORY_ORDER.filter(cat => allTags.includes(cat));
-  // + éventuelles catégories non prévues dans la charte mais présentes dans le sheet
   const extraCategories = allTags.filter(cat => cat && !CATEGORY_ORDER.includes(cat));
-
   const categories = [...presentCategories, ...extraCategories];
 
-  const catContainer = document.getElementById("categoryChips");
-  catContainer.innerHTML = `<button class="chip active" data-cat="all">Toutes</button>` +
-    categories.map(cat => `
-      <button class="chip" data-cat="${escapeHtml(cat)}">
-        <span class="dot" style="background:${categoryColor(cat)}"></span>${escapeHtml(cat)}
-      </button>
-    `).join("");
-
-  catContainer.querySelectorAll(".chip").forEach(btn => {
-    btn.addEventListener("click", () => {
-      catContainer.querySelectorAll(".chip").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      state.category = btn.dataset.cat;
-      applyFilters();
-    });
+  const categorySelect = document.getElementById("categorySelect");
+  categorySelect.innerHTML = `<option value="all">Catégorie</option>` +
+    categories.map(cat => `<option value="${escapeHtml(cat)}">${escapeHtml(cat)}</option>`).join("");
+  categorySelect.addEventListener("change", () => {
+    state.category = categorySelect.value;
+    applyFilters();
   });
 
-  // Statuts
   const presentStatuses = STATUS_ORDER.filter(s => state.allPlaces.some(p => p.statut === s));
-  const statusContainer = document.getElementById("statusSegment");
-  statusContainer.innerHTML = `<button class="status-chip active" data-status="all" style="background:#eee;color:#333">Tous</button>` +
-    presentStatuses.map(s => {
-      const style = STATUS_STYLES[s];
-      return `<button class="status-chip" data-status="${escapeHtml(s)}" style="background:${style.bg};color:${style.text}">${escapeHtml(s)}</button>`;
-    }).join("");
-
-  statusContainer.querySelectorAll(".status-chip").forEach(btn => {
-    btn.addEventListener("click", () => {
-      statusContainer.querySelectorAll(".status-chip").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      state.status = btn.dataset.status;
-      applyFilters();
-    });
+  const statusSelect = document.getElementById("statusSelect");
+  statusSelect.innerHTML = `<option value="all">Statut</option>` +
+    presentStatuses.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join("");
+  statusSelect.addEventListener("change", () => {
+    state.status = statusSelect.value;
+    applyFilters();
   });
+}
+
+// Bandeau de statistiques : nombre de lieux par statut + taux d'approbation
+function renderStats() {
+  const total = state.allPlaces.length;
+  const counts = {};
+  STATUS_ORDER.forEach(s => { counts[s] = state.allPlaces.filter(p => p.statut === s).length; });
+  const approuves = counts["Approuvé"] || 0;
+  const taux = total > 0 ? ((approuves / total) * 100).toFixed(1) : "0.0";
+
+  const statLabels = { "À faire": "À faire", "Approuvé": "Approuvés", "Bof bof": "Bof bof" };
+  const statColors = { "À faire": STATUS_STYLES["À faire"].text, "Approuvé": STATUS_STYLES["Approuvé"].text, "Bof bof": STATUS_STYLES["Bof bof"].text };
+
+  const cards = STATUS_ORDER.map(s => `
+    <div class="stat-card">
+      <p class="stat-label" style="color:${statColors[s]}">${escapeHtml(statLabels[s])}</p>
+      <p class="stat-value">${counts[s] || 0}</p>
+    </div>
+  `).join("") + `
+    <div class="stat-card">
+      <p class="stat-label" style="color:${categoryColor(CATEGORY_ORDER[3]) /* bleu Cul'ture, cohérent avec la charte */}">Taux d'approbation Rémissa</p>
+      <p class="stat-value">${taux.replace(".", ",")} %</p>
+    </div>
+  `;
+
+  document.getElementById("statsRow").innerHTML = cards;
 }
 
 function applyFilters() {
@@ -1300,8 +1380,8 @@ function switchView(viewId) {
   document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
   document.getElementById(viewId).classList.add("active");
 
-  document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
-  document.querySelector(`.nav-btn[data-view="${viewId}"]`).classList.add("active");
+  document.querySelectorAll(".nav-tab").forEach(b => b.classList.remove("active"));
+  document.querySelector(`.nav-tab[data-view="${viewId}"]`).classList.add("active");
 
   // Leaflet a besoin d'un recalcul de taille quand son conteneur redevient visible
   if (viewId === "mapView" && state.map) {
@@ -1336,7 +1416,7 @@ function init() {
   });
 
   // Onglets bas de page
-  document.querySelectorAll(".nav-btn").forEach(btn => {
+  document.querySelectorAll(".nav-tab").forEach(btn => {
     btn.addEventListener("click", () => switchView(btn.dataset.view));
   });
 
