@@ -336,6 +336,10 @@ input { font-family: inherit; }
   z-index: 1000;
   padding: 0;
 }
+/* CRUCIAL : sans cette règle, l'attribut HTML "hidden" est écrasé par le
+   "display: flex" ci-dessus (même spécificité, mais CSS auteur > CSS
+   navigateur), et la modale reste visible + bloque les clics même masquée. */
+.modal-overlay[hidden] { display: none; }
 @media (min-width: 560px) {
   .modal-overlay { align-items: center; padding: 20px; }
 }
@@ -440,16 +444,6 @@ input { font-family: inherit; }
 }
 .pin-marker svg { display: block; }
 .leaflet-popup-content-wrapper { border-radius: var(--radius-sm); }
-
-/* Clusters (regroupement de marqueurs proches) */
-.marker-cluster-small, .marker-cluster-medium, .marker-cluster-large {
-  background: rgba(179, 78, 107, 0.18);
-}
-.marker-cluster-small div, .marker-cluster-medium div, .marker-cluster-large div {
-  background: var(--color-primary);
-  color: #fff;
-  font-weight: 700;
-}
 
 /* ---------- CHARGEMENT / ERREUR ---------- */
 /* Générique catégorie -> couleur, appliqué en inline-style depuis le JS
@@ -764,6 +758,16 @@ html.admin-page, body.admin-body {
 .marker-cluster span {
 	line-height: 30px;
 	}
+
+/* ---------- Couleur des clusters (placé APRÈS la lib pour avoir la priorité) ---------- */
+.marker-cluster-small, .marker-cluster-medium, .marker-cluster-large {
+  background: rgba(179, 78, 107, 0.25) !important;
+}
+.marker-cluster-small div, .marker-cluster-medium div, .marker-cluster-large div {
+  background: var(--color-primary) !important;
+  color: #fff !important;
+  font-weight: 700 !important;
+}
 </style>
 </head>
 <body>
@@ -1005,9 +1009,18 @@ function rowToPlace(row) {
   const lat = parseFloat((row["Latitude"] || "").toString().replace(",", "."));
   const lng = parseFloat((row["Longitude"] || "").toString().replace(",", "."));
 
+  // Un lieu peut avoir plusieurs catégories séparées par une virgule dans le
+  // CSV (ex : "Cul'ture, Expériences"). "categories" liste tout, "categorie"
+  // garde la première (utilisée par défaut pour la couleur/l'affichage).
+  const categories = (row["Catégorie"] || "")
+    .split(",")
+    .map(c => c.trim())
+    .filter(Boolean);
+
   return {
     nom: (row["Nom du lieu"] || "").trim(),
-    categorie: (row["Catégorie"] || "").trim(),
+    categories: categories,
+    categorie: categories[0] || "",
     statut: (row["Statut"] || "").trim(),
     adresse: (row["Adresse"] || "").trim(),
     urlMaps: (row["URL Google Maps"] || "").trim(),
@@ -1018,6 +1031,24 @@ function rowToPlace(row) {
     lat: Number.isFinite(lat) ? lat : null,
     lng: Number.isFinite(lng) ? lng : null,
   };
+}
+
+// Détermine la couleur à utiliser pour un lieu donné :
+// - si un ou plusieurs filtres de catégorie sont actifs ET que ce lieu
+//   correspond à l'un d'eux -> couleur de cette catégorie filtrée
+// - sinon -> couleur de la première catégorie du lieu
+function effectiveColor(place) {
+  if (state.category !== "all" && place.categories.includes(state.category)) {
+    return categoryColor(state.category);
+  }
+  return categoryColor(place.categorie);
+}
+
+// Génère un badge par catégorie du lieu (un lieu peut en avoir plusieurs)
+function categoryBadgesHtml(place) {
+  return place.categories
+    .map(cat => `<span class="badge" style="background:${categoryColor(cat)}">${escapeHtml(cat)}</span>`)
+    .join("");
 }
 
 /* ============================================================
@@ -1094,7 +1125,7 @@ function renderMarkers(places) {
 
   withCoords.forEach(place => {
     const marker = L.marker([place.lat, place.lng], {
-      icon: makePinIcon(categoryColor(place.categorie)),
+      icon: makePinIcon(effectiveColor(place)),
     });
     marker.on("click", () => openModal(place));
     state.markersLayer.addLayer(marker);
@@ -1143,7 +1174,7 @@ function renderCards(places) {
       <div class="place-card-body">
         <h3 class="place-card-title">${escapeHtml(place.nom)}</h3>
         <div class="badge-row">
-          ${place.categorie ? `<span class="badge" style="background:${categoryColor(place.categorie)}">${escapeHtml(place.categorie)}</span>` : ""}
+          ${categoryBadgesHtml(place)}
           ${place.statut ? `<span class="badge badge-status" style="background:${statusStyle.bg};color:${statusStyle.text}">${escapeHtml(place.statut)}</span>` : ""}
         </div>
         ${place.adresse ? `<p class="place-card-address">📍 ${escapeHtml(place.adresse)}</p>` : ""}
@@ -1172,7 +1203,7 @@ function openModal(place) {
     <div class="modal-body">
       <h2 class="modal-title">${escapeHtml(place.nom)}</h2>
       <div class="badge-row">
-        ${place.categorie ? `<span class="badge" style="background:${categoryColor(place.categorie)}">${escapeHtml(place.categorie)}</span>` : ""}
+        ${categoryBadgesHtml(place)}
         ${place.statut ? `<span class="badge badge-status" style="background:${statusStyle.bg};color:${statusStyle.text}">${escapeHtml(place.statut)}</span>` : ""}
       </div>
       ${place.adresse ? `<p class="modal-address">📍 ${escapeHtml(place.adresse)}</p>` : ""}
@@ -1199,13 +1230,12 @@ function closeModal() {
    9. FILTRES (catégorie + statut) & RECHERCHE OUVERTE
    ============================================================ */
 function buildFilterChips() {
-  // Catégories réellement présentes dans les données, dans l'ordre de la charte
-  const presentCategories = CATEGORY_ORDER.filter(cat =>
-    state.allPlaces.some(p => p.categorie === cat)
-  );
+  // Toutes les catégories réellement présentes (chaque lieu peut en avoir
+  // plusieurs), aplaties et dédupliquées, dans l'ordre de la charte
+  const allTags = [...new Set(state.allPlaces.flatMap(p => p.categories))];
+  const presentCategories = CATEGORY_ORDER.filter(cat => allTags.includes(cat));
   // + éventuelles catégories non prévues dans la charte mais présentes dans le sheet
-  const extraCategories = [...new Set(state.allPlaces.map(p => p.categorie))]
-    .filter(cat => cat && !CATEGORY_ORDER.includes(cat));
+  const extraCategories = allTags.filter(cat => cat && !CATEGORY_ORDER.includes(cat));
 
   const categories = [...presentCategories, ...extraCategories];
 
@@ -1249,7 +1279,7 @@ function applyFilters() {
   const term = normalize(state.search);
 
   state.filtered = state.allPlaces.filter(place => {
-    if (state.category !== "all" && place.categorie !== state.category) return false;
+    if (state.category !== "all" && !place.categories.includes(state.category)) return false;
     if (state.status !== "all" && place.statut !== state.status) return false;
 
     if (term) {
