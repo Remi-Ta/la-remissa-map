@@ -1,92 +1,62 @@
 # La Rémissa Map
 
-Application mobile-first (HTML / CSS / JS pur, aucune dépendance à installer) qui affiche vos lieux sur une carte Leaflet (fond OpenStreetMap / CartoDB, 100% gratuit et illimité) et dans une liste de fiches façon Softr.
+Application mobile-first qui affiche vos lieux sur une carte et dans une liste de fiches façon Softr.
 
-## Comment fonctionnent les données
-
-Après plusieurs essais avec une lecture en direct de Google Sheets (bloquée par des restrictions CORS propres à GitHub Pages), la solution retenue est plus simple et 100% fiable :
-
-**Vos lieux vivent dans un fichier `data/lieux.csv`, à l'intérieur même de votre dépôt GitHub.**
-
-Ça élimine tout problème réseau : le fichier est chargé depuis le même site (aucune requête externe), donc ça marche toujours, partout, sans configuration.
-
-## 1. Mettre à jour vos lieux — 3 façons possibles
-
-### Option A — La page admin incluse (recommandé, la plus simple)
-
-1. Ouvrez `admin.html` (en local ou une fois déployé, à l'adresse `.../admin.html`).
-2. Cliquez sur **"Importer un fichier CSV"** pour charger `data/lieux.csv` existant (ou un export de votre Google Sheets), et continuez à l'éditer.
-3. Ajoutez / modifiez / supprimez vos lieux dans le formulaire et le tableau (tout est sauvegardé automatiquement dans votre navigateur pendant que vous travaillez).
-4. Cliquez sur **"Télécharger le CSV"**.
-5. Remplacez le fichier `data/lieux.csv` de votre dépôt par celui téléchargé (sur github.com : ouvrez `data/lieux.csv`, bouton crayon "Edit this file", supprimez le contenu, collez le nouveau, "Commit changes" — ou bien "Add file > Upload files" en glissant le fichier téléchargé).
-
-⚠️ La page admin utilise le stockage local de votre navigateur (`localStorage`) : elle ne synchronise rien automatiquement avec GitHub. C'est un outil pour préparer confortablement votre fichier CSV avant de le publier — pensez à exporter avant de fermer l'onglet si vous n'avez pas fini.
-
-### Option B — Éditer le CSV directement sur GitHub
-
-1. Sur github.com, ouvrez `data/lieux.csv`.
-2. Bouton crayon (Edit this file).
-3. Modifiez le texte directement (format CSV : une ligne = un lieu, valeurs entre guillemets).
-4. "Commit changes".
-
-### Option C — Continuer à utiliser Google Sheets comme brouillon
-
-Tenez votre tableau Google Sheets comme avant, puis :
-`Fichier > Télécharger > Valeurs séparées par des virgules (.csv)`, renommez le fichier téléchargé en `lieux.csv`, remplacez-le dans `data/` de votre dépôt (Option A étape 5, ou Option B).
-
-Dans tous les cas, gardez **exactement** les mêmes en-têtes de colonnes :
-`Nom du lieu`, `Catégorie`, `Statut`, `Adresse`, `URL Google Maps`, `Photos`, `Informations`, `Site web`, `Date d'ajout`, `Latitude`, `Longitude`.
-
-La colonne `Latitude`/`Longitude` doit contenir des nombres décimaux (ex : `48.8566`). Les lignes sans coordonnées valides s'affichent quand même dans la liste, mais pas sur la carte.
-
-La colonne `Photos` accepte une URL brute, ou le format Softr `nomfichier.png (https://...)` — la première URL trouvée dans le texte est utilisée.
-
-## 2. Tester en local
-
-Lancez un petit serveur local (nécessaire ici car le navigateur bloque parfois la lecture de fichiers locaux en `fetch` sans serveur) :
-```
-npx serve .
-```
-puis ouvrez l'URL affichée.
-
-## 3. Héberger gratuitement sur GitHub Pages
-
-1. Créez un dépôt GitHub (public) et poussez-y tout le contenu de ce dossier (`index.html`, `admin.html`, `css/`, `js/`, `data/`).
-2. Dans le dépôt : **Settings > Pages > Source**, choisissez la branche `main` et le dossier `/ (root)`.
-3. Votre app sera disponible à `https://votre-nom.github.io/nom-du-depot/`, et l'admin à `https://votre-nom.github.io/nom-du-depot/admin.html`.
-
-💡 Pensez à ne pas partager publiquement le lien `admin.html` si vous ne voulez pas que d'autres personnes puissent voir/modifier le formulaire (il n'y a pas de mot de passe — n'importe qui connaissant l'URL peut y accéder, mais personne ne peut modifier vos données réelles sans faire elle-même un commit sur votre dépôt GitHub).
-
-## 4. Personnaliser
-
-- **Couleurs des catégories / statuts** : tout est centralisé en haut de `js/app.js` (`CATEGORY_COLORS`, `STATUS_STYLES`) et repris automatiquement dans `css/style.css`.
-- **Suggestions de catégories/statuts dans l'admin** : `CATEGORY_SUGGESTIONS` / `STATUS_SUGGESTIONS` dans `js/admin.js`.
-- **Messages de bienvenue aléatoires** : liste `WELCOME_MESSAGES` dans `js/app.js`.
-- **Centre par défaut de la carte** : `DEFAULT_CENTER` / `DEFAULT_ZOOM` dans `js/app.js`.
-- **Couleur des boutons/accent** : variable CSS `--color-primary` dans `css/style.css` (actuellement `#B34E6B`).
-
-## Structure des fichiers
+## Structure — volontairement réduite à 5 fichiers
 
 ```
 remissa-map/
-├── index.html          # Application principale (header, recherche, carte, liste, modale)
-├── admin.html           # Page d'administration (formulaire + import/export CSV)
-├── css/
-│   ├── style.css        # Charte graphique principale
-│   └── admin.css        # Styles additionnels pour l'admin
-├── js/
-│   ├── app.js            # Chargement du CSV + logique carte/filtres/recherche/modale
-│   ├── admin.js          # Logique du formulaire admin (localStorage, import/export CSV)
-│   └── vendor/
-│       └── papaparse.min.js   # Librairie de lecture CSV, hébergée localement (pas de CDN externe)
+├── .nojekyll          # empêche GitHub Pages d'utiliser Jekyll (obligatoire, voir plus bas)
+├── index.html          # Application complète : HTML + CSS + JS, tout dans ce seul fichier
+├── admin.html          # Page d'administration : HTML + CSS + JS, tout dans ce seul fichier
 ├── data/
-│   └── lieux.csv         # VOS DONNÉES — à mettre à jour régulièrement
+│   └── lieux.csv        # VOS DONNÉES
 └── README.md
 ```
 
-## Notes techniques
+**Pourquoi si peu de fichiers ?** Les allers-retours précédents ont montré que le vrai problème n'était pas technique mais la synchronisation : remplacer un fichier JS sans remplacer le HTML qui va avec (ou l'inverse) casse tout silencieusement. Avec tout regroupé dans `index.html` et `admin.html`, il n'y a plus qu'un seul fichier à remplacer par page — impossible de se retrouver avec une version dépareillée.
 
-- La carte utilise **Leaflet.js** avec le fond **CartoDB Positron** (gratuit, sans clé API, sans limite d'utilisation).
-- Le CSV est lu et parsé avec **PapaParse**, directement dans le navigateur (aucun serveur/backend requis).
-- La recherche filtre en temps réel `Nom du lieu`, `Adresse` et `Informations`, insensible aux accents et à la casse.
-- Aucune base de données externe, aucun serveur : tout est statique, donc gratuit et hébergeable n'importe où (GitHub Pages, Netlify, etc.).
+Seule dépendance externe restante : **Leaflet** (la carte), chargée depuis son CDN officiel `unpkg.com` — le plus fiable qui soit, utilisé par des millions de sites. PapaParse et le clustering sont maintenant intégrés directement dans le HTML.
+
+## ⚠️ Le fichier `.nojekyll`
+
+Sans lui, GitHub Pages essaie de traiter vos fichiers avec Jekyll, ce qui peut faire échouer le déploiement ("Failing after 8s") à cause de séquences de caractères dans le code minifié. Il doit être **présent à la racine du dépôt**, vide. Comme son nom commence par un point, vérifiez bien qu'il a été poussé (certains explorateurs de fichiers le masquent).
+
+## Fond de carte : Thunderforest.Atlas
+
+Le code est configuré pour utiliser le fond **Thunderforest.Atlas**, mais Thunderforest nécessite une **clé API gratuite** (contrairement à CartoDB) :
+
+1. Créez un compte gratuit sur [thunderforest.com/pricing](https://www.thunderforest.com/pricing/)
+2. Récupérez votre clé API
+3. Ouvrez `index.html`, cherchez la ligne :
+   ```js
+   const THUNDERFOREST_API_KEY = ""; // <-- collez votre clé ici
+   ```
+4. Collez votre clé entre les guillemets
+
+**Tant qu'aucune clé n'est renseignée**, l'app bascule automatiquement sur le fond **CartoDB Positron** (gratuit, sans clé) pour que la carte reste utilisable. C'est très probablement ce qui causait le filigrane que vous avez vu : les tuiles Thunderforest affichent un filigrane "à usage d'évaluation" tant qu'aucune clé valide n'est fournie — avec une vraie clé, ce filigrane disparaît.
+
+## Mettre à jour vos lieux
+
+**Option A — page admin** : ouvrez `admin.html`, importez le CSV existant, éditez via le formulaire, téléchargez le CSV, remplacez `data/lieux.csv` dans votre dépôt.
+
+**Option B — édition directe sur GitHub** : ouvrez `data/lieux.csv` sur github.com, crayon "Edit this file", modifiez, "Commit changes".
+
+Colonnes obligatoires, exactement : `Nom du lieu`, `Catégorie`, `Statut`, `Adresse`, `URL Google Maps`, `Photos`, `Informations`, `Site web`, `Date d'ajout`, `Latitude`, `Longitude`.
+
+## Déploiement
+
+1. Poussez les 5 éléments ci-dessus vers un dépôt GitHub public (`.nojekyll` inclus, bien vérifier qu'il y est).
+2. **Settings > Pages > Source** : branche `main`, dossier `/ (root)`.
+3. Site : `https://votre-nom.github.io/nom-du-depot/` — admin : `.../admin.html`.
+
+## Personnaliser
+
+Tout se trouve directement dans la balise `<script>` de `index.html` (recherchez ces noms avec Ctrl+F) :
+- `CATEGORY_COLORS` / `STATUS_STYLES` — couleurs
+- `WELCOME_MESSAGES` — messages d'accueil aléatoires
+- `DEFAULT_CENTER` / `DEFAULT_ZOOM` — centrage carte (actuellement Île-de-France)
+- `THUNDERFOREST_API_KEY` — clé API du fond de carte
+- `maxClusterRadius` (dans `initMap()`) — sensibilité du regroupement en clusters
+
+La couleur d'accent (`#B34E6B`) est dans la balise `<style>`, variable `--color-primary`.
