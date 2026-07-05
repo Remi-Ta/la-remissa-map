@@ -538,7 +538,7 @@ input { font-family: inherit; }
 /* ================= styles admin.html (fusionnés) ================= */
 /* ================= ADMIN — styles additionnels ================= */
 
-html, body.admin-body {
+html.admin-page, body.admin-body {
   overflow-y: auto;
   height: auto;
 }
@@ -1023,35 +1023,42 @@ function rowToPlace(row) {
 /* ============================================================
    6. CARTE LEAFLET
    ============================================================
-   Fond de carte : Thunderforest.Atlas.
-   ⚠️ Thunderforest nécessite une clé API GRATUITE (contrairement à CartoDB) :
-   1. Créez un compte sur https://www.thunderforest.com/pricing/ (offre gratuite)
-   2. Copiez votre clé API personnelle
-   3. Collez-la ci-dessous, entre les guillemets
-
-   Tant qu'aucune clé n'est renseignée, l'app bascule automatiquement sur le
-   fond CartoDB Positron (gratuit, sans clé) pour que la carte reste utilisable
-   — sans clé Thunderforest valide, ses tuiles affichent un filigrane
-   "for evaluation only" qui rend la carte inutilisable, d'où ce repli.
+   Fond de carte : Thunderforest.Atlas en priorité, avec repli AUTOMATIQUE
+   et immédiat sur CartoDB Positron (gratuit, sans clé) si Thunderforest ne
+   répond pas (clé invalide, quota dépassé, service indisponible…) — comme ça
+   la carte a toujours un fond, quoi qu'il arrive.
    ============================================================ */
-const THUNDERFOREST_API_KEY = ""; // <-- collez votre clé ici
+const THUNDERFOREST_API_KEY = "3rFZLyRHrpulP9ykA0U5";
 
 function initMap() {
   state.map = L.map("map", { zoomControl: true }).setView(DEFAULT_CENTER, DEFAULT_ZOOM);
 
+  const cartoFallback = L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    subdomains: "abcd",
+    maxZoom: 20,
+  });
+
   if (THUNDERFOREST_API_KEY) {
-    L.tileLayer(`https://{s}.tile.thunderforest.com/atlas/{z}/{x}/{y}.png?apikey=${THUNDERFOREST_API_KEY}`, {
+    const thunderLayer = L.tileLayer(`https://{s}.tile.thunderforest.com/atlas/{z}/{x}/{y}.png?apikey=${THUNDERFOREST_API_KEY}`, {
       attribution: '&copy; <a href="https://www.thunderforest.com/">Thunderforest</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
       subdomains: "abc",
       maxZoom: 22,
-    }).addTo(state.map);
+    });
+
+    let fallbackTriggered = false;
+    thunderLayer.on("tileerror", () => {
+      if (fallbackTriggered) return;
+      fallbackTriggered = true;
+      console.warn("[La Rémissa Map] Thunderforest indisponible (clé invalide/quota/service down) — repli sur CartoDB.");
+      state.map.removeLayer(thunderLayer);
+      cartoFallback.addTo(state.map);
+    });
+
+    thunderLayer.addTo(state.map);
   } else {
-    console.warn("[La Rémissa Map] Aucune clé Thunderforest renseignée (THUNDERFOREST_API_KEY) : fond CartoDB utilisé par défaut.");
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
-      subdomains: "abcd",
-      maxZoom: 20,
-    }).addTo(state.map);
+    console.warn("[La Rémissa Map] Aucune clé Thunderforest renseignée : fond CartoDB utilisé par défaut.");
+    cartoFallback.addTo(state.map);
   }
 
   // Regroupement des marqueurs proches en clusters quand on dézoome
@@ -1062,6 +1069,7 @@ function initMap() {
   });
   state.map.addLayer(state.markersLayer);
 }
+
 
 // Icône en forme de pin (goutte inversée, façon Google Maps), colorée par catégorie
 function makePinIcon(color) {
