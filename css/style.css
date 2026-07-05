@@ -418,49 +418,24 @@ input { font-family: inherit; }
 }
 .btn-primary:active { background: var(--color-primary-dark); }
 
-/* ---------- MARQUEURS CARTE ---------- */
-.custom-marker span {
-  display: block;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  border: 2.5px solid #fff;
-  box-shadow: 0 1px 5px rgba(0,0,0,0.35);
+/* ---------- MARQUEURS CARTE (pins façon Google Maps) ---------- */
+.pin-marker {
+  filter: drop-shadow(0 2px 3px rgba(0,0,0,0.35));
 }
+.pin-marker svg { display: block; }
 .leaflet-popup-content-wrapper { border-radius: var(--radius-sm); }
 
-/* ---------- CHARGEMENT / ERREUR ---------- */
-/* ---------- CHARGEMENT / ERREUR (bandeaux discrets, non bloquants) ---------- */
-.loading-state, .error-state {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  background: var(--color-surface);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  z-index: 2000;
-  color: var(--color-text-soft);
-  font-size: 13px;
-  text-align: center;
-  padding: 8px 16px;
-  border-bottom: 1px solid var(--color-border);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+/* Clusters (regroupement de marqueurs proches) */
+.marker-cluster-small, .marker-cluster-medium, .marker-cluster-large {
+  background: rgba(179, 78, 107, 0.18);
 }
-.error-state { color: #B3261E; background: #FDECEC; }
-.spinner {
-  width: 16px;
-  height: 16px;
-  border: 2px solid var(--color-border);
-  border-top-color: var(--color-primary);
-  border-radius: 50%;
-  animation: spin .8s linear infinite;
-  flex-shrink: 0;
+.marker-cluster-small div, .marker-cluster-medium div, .marker-cluster-large div {
+  background: var(--color-primary);
+  color: #fff;
+  font-weight: 700;
 }
-@keyframes spin { to { transform: rotate(360deg); } }
 
+/* ---------- CHARGEMENT / ERREUR ---------- */
 /* Générique catégorie -> couleur, appliqué en inline-style depuis le JS
    (voir CATEGORY_COLORS dans app.js) mais classes de secours ci-dessous */
 .cat-manger      { background: var(--cat-manger); }
