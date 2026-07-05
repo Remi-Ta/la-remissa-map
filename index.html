@@ -13,9 +13,6 @@
 
 <!-- Leaflet.js — carte 100% gratuite et illimitée (fond CartoDB Positron) -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<link rel="stylesheet" href="css/vendor/MarkerCluster.css" />
-<link rel="stylesheet" href="css/vendor/MarkerCluster.Default.css" />
-
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -88,10 +85,8 @@
 
 <!-- Leaflet -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<!-- Clustering de marqueurs, hébergé localement -->
-<script src="js/vendor/leaflet.markercluster.js"></script>
-<!-- PapaParse — lecture du CSV local (data/lieux.csv), hébergé dans ce dépôt (pas de dépendance CDN externe) -->
-<script src="js/vendor/papaparse.min.js"></script>
+<!-- PapaParse + clustering, fusionnés et hébergés localement (pas de CDN externe) -->
+<script src="js/vendor.js"></script>
 
 <script src="js/app.js"></script>
 </body>
