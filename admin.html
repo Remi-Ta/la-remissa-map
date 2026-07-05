@@ -657,6 +657,14 @@ html.admin-page, body.admin-body {
   border-collapse: collapse;
   font-size: 13px;
 }
+.status-inline-select {
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 4px 6px;
+  font-size: 12.5px;
+  background: var(--color-bg);
+  color: var(--color-text);
+}
 .admin-table th, .admin-table td {
   text-align: left;
   padding: 8px 10px;
@@ -925,7 +933,12 @@ function renderTable() {
     tr.innerHTML = `
       <td>${escapeHtml(p["Nom du lieu"])}</td>
       <td>${escapeHtml(p["Catégorie"])}</td>
-      <td>${escapeHtml(p["Statut"])}</td>
+      <td>
+        <select class="status-inline-select" data-index="${index}">
+          ${STATUS_SUGGESTIONS.map(s => `<option value="${escapeHtml(s)}" ${p["Statut"] === s ? "selected" : ""}>${escapeHtml(s)}</option>`).join("")}
+          ${p["Statut"] && !STATUS_SUGGESTIONS.includes(p["Statut"]) ? `<option value="${escapeHtml(p["Statut"])}" selected>${escapeHtml(p["Statut"])}</option>` : ""}
+        </select>
+      </td>
       <td>${escapeHtml(p["Adresse"])}</td>
       <td class="row-actions">
         <button data-action="edit" data-index="${index}">✏️</button>
@@ -933,6 +946,14 @@ function renderTable() {
       </td>
     `;
     tbody.appendChild(tr);
+  });
+
+  tbody.querySelectorAll(".status-inline-select").forEach(sel => {
+    sel.addEventListener("change", () => {
+      const index = parseInt(sel.dataset.index, 10);
+      places[index]["Statut"] = sel.value;
+      saveToStorage();
+    });
   });
 
   tbody.querySelectorAll("button[data-action='edit']").forEach(btn => {
