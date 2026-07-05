@@ -3,7 +3,6 @@
    Application mobile-first : data/lieux.csv -> Carte Leaflet + Liste + Recherche
    ========================================================================= */
 
-
 /* ============================================================
    1. CONFIGURATION — À MODIFIER PAR VOUS
    ============================================================
@@ -114,7 +113,10 @@ function escapeHtml(str) {
    5. CHARGEMENT DES DONNÉES (data/lieux.csv -> objets)
    ============================================================ */
 function loadData() {
+  console.log("[La Rémissa Map] Démarrage du chargement :", SHEET_CSV_URL);
+
   if (typeof Papa === "undefined") {
+    console.error("[La Rémissa Map] Papa (PapaParse) n'est pas défini au moment de loadData().");
     showError("La librairie PapaParse ne s'est pas chargée (js/vendor/papaparse.min.js). Vérifiez que ce fichier est bien présent dans votre dépôt.");
     return;
   }
@@ -124,20 +126,23 @@ function loadData() {
     header: true,
     skipEmptyLines: true,
     complete: (results) => {
+      console.log("[La Rémissa Map] Papa.parse complete() déclenché.", results);
       try {
         state.allPlaces = results.data
           .map(rowToPlace)
           .filter(p => p.nom); // on ignore les lignes vides / sans nom
+        console.log("[La Rémissa Map] Lieux chargés :", state.allPlaces.length);
         document.getElementById("loadingState").hidden = true;
+        document.getElementById("errorState").hidden = true;
         buildFilterChips();
         applyFilters();
       } catch (err) {
-        console.error(err);
-        showError("Erreur lors de la lecture des données.");
+        console.error("[La Rémissa Map] Erreur pendant le traitement des données :", err);
+        showError("Erreur lors de la lecture des données (voir la console pour le détail).");
       }
     },
     error: (err) => {
-      console.error(err);
+      console.error("[La Rémissa Map] Papa.parse error() déclenché :", err);
       showError("Impossible de charger data/lieux.csv. Vérifiez que ce fichier existe bien dans votre dépôt et qu'il est correctement formaté.");
     },
   });
