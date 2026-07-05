@@ -27,9 +27,10 @@
 const SHEET_CSV_URL = "data/lieux.csv";
 
 
-// Centre par défaut de la carte si aucune coordonnée n'est trouvée (Paris)
-const DEFAULT_CENTER = [48.8566, 2.3522];
-const DEFAULT_ZOOM = 12;
+// Centre par défaut de la carte : Île-de-France (utilisé si pas encore de données,
+// et comme vue de base large — ne bouge plus ensuite au fil des filtres)
+const DEFAULT_CENTER = [48.75, 2.45];
+const DEFAULT_ZOOM = 9;
 
 /* ============================================================
    2. CHARTE GRAPHIQUE — couleurs des catégories et statuts
@@ -116,8 +117,7 @@ function loadData() {
   console.log("[La Rémissa Map] Démarrage du chargement :", SHEET_CSV_URL);
 
   if (typeof Papa === "undefined") {
-    console.error("[La Rémissa Map] Papa (PapaParse) n'est pas défini au moment de loadData().");
-    showError("La librairie PapaParse ne s'est pas chargée (js/vendor/papaparse.min.js). Vérifiez que ce fichier est bien présent dans votre dépôt.");
+    console.error("[La Rémissa Map] Papa (PapaParse) n'est pas défini au moment de loadData(). Vérifiez que js/vendor/papaparse.min.js est bien présent.");
     return;
   }
 
@@ -132,47 +132,17 @@ function loadData() {
           .map(rowToPlace)
           .filter(p => p.nom); // on ignore les lignes vides / sans nom
         console.log("[La Rémissa Map] Lieux chargés :", state.allPlaces.length);
-        document.getElementById("loadingState").hidden = true;
-        document.getElementById("errorState").hidden = true;
         buildFilterChips();
         applyFilters();
+        fitMapToPlaces(state.allPlaces); // cadrage initial une seule fois
       } catch (err) {
         console.error("[La Rémissa Map] Erreur pendant le traitement des données :", err);
-        showError("Erreur lors de la lecture des données (voir la console pour le détail).");
       }
     },
     error: (err) => {
       console.error("[La Rémissa Map] Papa.parse error() déclenché :", err);
-      showError("Impossible de charger data/lieux.csv. Vérifiez que ce fichier existe bien dans votre dépôt et qu'il est correctement formaté.");
     },
   });
-}
-
-// Transforme une ligne du CSV (colonnes françaises exactes) en objet "place"
-function rowToPlace(row) {
-  const lat = parseFloat((row["Latitude"] || "").toString().replace(",", "."));
-  const lng = parseFloat((row["Longitude"] || "").toString().replace(",", "."));
-
-  return {
-    nom: (row["Nom du lieu"] || "").trim(),
-    categorie: (row["Catégorie"] || "").trim(),
-    statut: (row["Statut"] || "").trim(),
-    adresse: (row["Adresse"] || "").trim(),
-    urlMaps: (row["URL Google Maps"] || "").trim(),
-    photo: firstPhotoUrl(row["Photos"]),
-    infos: (row["Informations"] || "").trim(),
-    site: (row["Site web"] || "").trim(),
-    dateAjout: (row["Date d'ajout"] || "").trim(),
-    lat: Number.isFinite(lat) ? lat : null,
-    lng: Number.isFinite(lng) ? lng : null,
-  };
-}
-
-function showError(message) {
-  document.getElementById("loadingState").hidden = true;
-  const errEl = document.getElementById("errorState");
-  errEl.hidden = false;
-  errEl.querySelector("p").textContent = message;
 }
 
 /* ============================================================
@@ -187,15 +157,29 @@ function initMap() {
     maxZoom: 20,
   }).addTo(state.map);
 
-  state.markersLayer = L.layerGroup().addTo(state.map);
+  // Regroupement des marqueurs proches en clusters quand on dézoome
+  state.markersLayer = L.markerClusterGroup({
+    maxClusterRadius: 55,
+    spiderfyOnMaxZoom: true,
+    showCoverageOnHover: false,
+  });
+  state.map.addLayer(state.markersLayer);
 }
 
-function makeDivIcon(color) {
+// Icône en forme de pin (goutte inversée, façon Google Maps), colorée par catégorie
+function makePinIcon(color) {
+  const svg = `
+    <svg width="30" height="40" viewBox="0 0 30 40" xmlns="http://www.w3.org/2000/svg">
+      <path d="M15 0C6.7 0 0 6.7 0 15c0 10.5 13 23.6 14 24.6.5.5 1.4.5 2 0C17 38.6 30 25.5 30 15 30 6.7 23.3 0 15 0z"
+            fill="${color}" stroke="#ffffff" stroke-width="2"/>
+      <circle cx="15" cy="15" r="6" fill="#ffffff"/>
+    </svg>`;
   return L.divIcon({
-    className: "custom-marker",
-    html: `<span style="background:${color}"></span>`,
-    iconSize: [18, 18],
-    iconAnchor: [9, 9],
+    className: "pin-marker",
+    html: svg,
+    iconSize: [30, 40],
+    iconAnchor: [15, 39],   // pointe du pin = position exacte du lieu
+    popupAnchor: [0, -34],
   });
 }
 
@@ -205,19 +189,21 @@ function renderMarkers(places) {
 
   withCoords.forEach(place => {
     const marker = L.marker([place.lat, place.lng], {
-      icon: makeDivIcon(categoryColor(place.categorie)),
+      icon: makePinIcon(categoryColor(place.categorie)),
     });
     marker.on("click", () => openModal(place));
-    marker.addTo(state.markersLayer);
+    state.markersLayer.addLayer(marker);
   });
+}
 
-  // Ajuste la vue pour englober tous les marqueurs visibles (une seule fois
-  // idéalement au premier chargement, mais on le fait à chaque filtre pour
-  // que la carte reste pertinente — sans zoomer trop près si un seul point)
-  if (withCoords.length > 0) {
-    const bounds = L.latLngBounds(withCoords.map(p => [p.lat, p.lng]));
-    state.map.fitBounds(bounds, { padding: [30, 30], maxZoom: 15 });
-  }
+// Cadre la carte pour englober tous les lieux — appelé une seule fois au
+// chargement initial, pas à chaque filtre (pour que la vue reste stable
+// et que les clusters ne "sautent" pas pendant qu'on tape une recherche)
+function fitMapToPlaces(places) {
+  const withCoords = places.filter(p => p.lat !== null && p.lng !== null);
+  if (withCoords.length === 0) return;
+  const bounds = L.latLngBounds(withCoords.map(p => [p.lat, p.lng]));
+  state.map.fitBounds(bounds, { padding: [30, 30], maxZoom: 13 });
 }
 
 /* ============================================================
