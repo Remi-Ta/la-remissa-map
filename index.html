@@ -482,7 +482,7 @@ html.list-mode #listView { height: auto; overflow: visible; }
   font-family: 'Fraunces', serif;
   font-weight: 600;
   font-size: 22px;
-  margin: 0 0 16px;
+  margin: 0 0 8px;
 }
 .modal-info-grid {
   display: grid;
@@ -519,7 +519,7 @@ html.list-mode #listView { height: auto; overflow: visible; }
   line-height: 1.6;
   color: var(--color-text);
   white-space: pre-line;
-  margin: 14px 0 24px;
+  margin: 0 0 18px;
 }
 
 .btn-primary {
@@ -1330,6 +1330,7 @@ function openModal(place) {
   content.innerHTML = `
     <div class="modal-body">
       <h2 class="modal-title">${escapeHtml(place.nom)}</h2>
+      ${place.infos ? `<p class="modal-description">${escapeHtml(place.infos)}</p>` : ""}
       <div class="modal-photo-wrap">${photoHtml}</div>
       <div class="badge-row">
         ${categoryBadgesHtml(place)}
@@ -1340,7 +1341,6 @@ function openModal(place) {
         ${place.site ? `<div><p class="modal-field-label">Site web</p><p class="modal-field-value"><a href="${escapeHtml(place.site)}" target="_blank" rel="noopener">${escapeHtml(place.site)}</a></p></div>` : ""}
       </div>
       ${place.dateAjout ? `<p class="modal-date">Date d'ajout<br>${escapeHtml(place.dateAjout)}</p>` : ""}
-      ${place.infos ? `<p class="modal-description">${escapeHtml(place.infos)}</p>` : ""}
       ${place.urlMaps
         ? `<a class="btn-primary" href="${escapeHtml(place.urlMaps)}" target="_blank" rel="noopener">↗ Ouvrir dans Google Maps</a>`
         : ""
