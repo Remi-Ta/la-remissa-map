@@ -183,6 +183,11 @@ input { font-family: inherit; }
   max-width: var(--container-max);
   margin: 0 auto;
   display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.toolbar-top-row {
+  display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
@@ -199,25 +204,36 @@ input { font-family: inherit; }
   color: var(--color-text-soft);
   margin: 0;
 }
-.toolbar-controls {
+
+/* Étiquettes de filtre cliquables (catégorie + statut), colorées pour que
+   la couleur se comprenne directement plutôt que via un menu déroulant */
+.chip-scroll {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+}
+.chip-scroll::-webkit-scrollbar { display: none; }
+.chip {
+  flex-shrink: 0;
+  border: 1.5px solid transparent;
+  background: var(--color-surface);
+  color: var(--color-text);
+  padding: 6px 13px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 600;
   display: flex;
   align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.filter-select {
-  appearance: none;
-  border: 1px solid var(--color-border);
-  background: var(--color-surface) url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="6" viewBox="0 0 10 6"><path d="M1 1l4 4 4-4" stroke="%236b6b74" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>') no-repeat right 12px center;
-  color: var(--color-text);
-  padding: 9px 30px 9px 14px;
-  border-radius: 999px;
-  font-size: 13.5px;
-  font-weight: 500;
+  gap: 6px;
   box-shadow: var(--shadow-card);
-  max-width: 160px;
+  transition: transform .12s ease, border-color .12s ease;
 }
+.chip:active { transform: scale(0.95); }
+.chip .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.chip.active { border-color: currentColor; }
+.chip.chip-all.active { border-color: var(--color-text); }
 
 .search-bar {
   width: 260px;
@@ -230,6 +246,7 @@ input { font-family: inherit; }
   border-radius: 999px;
   padding: 9px 16px;
   box-shadow: var(--shadow-card);
+  flex-shrink: 0;
 }
 .icon-search { width: 18px; height: 18px; color: var(--color-text-soft); flex-shrink: 0; }
 .search-bar input {
@@ -258,10 +275,8 @@ input { font-family: inherit; }
 }
 
 @media (max-width: 640px) {
-  .toolbar-inner { flex-direction: column; align-items: stretch; }
-  .toolbar-controls { width: 100%; }
+  .toolbar-top-row { flex-direction: column; align-items: stretch; }
   .search-bar { width: 100%; }
-  .filter-select { flex: 1; max-width: none; }
 }
 
 /* ---------- CONTENU (carte / liste) ---------- */
@@ -904,17 +919,11 @@ html.admin-page, body.admin-body {
   <!-- ===== BARRE D'OUTILS : titre de section + recherche + filtres ===== -->
   <div class="toolbar-panel">
     <div class="toolbar-inner">
-      <div class="toolbar-heading">
-        <h2>Tous les lieux</h2>
-        <p>Recherchez, filtrez et ouvrez une fiche pour voir les détails.</p>
-      </div>
-      <div class="toolbar-controls">
-        <select id="categorySelect" class="filter-select" aria-label="Filtrer par catégorie">
-          <option value="all">Catégorie</option>
-        </select>
-        <select id="statusSelect" class="filter-select" aria-label="Filtrer par statut">
-          <option value="all">Statut</option>
-        </select>
+      <div class="toolbar-top-row">
+        <div class="toolbar-heading">
+          <h2>Tous les lieux</h2>
+          <p>Recherchez, filtrez et ouvrez une fiche pour voir les détails.</p>
+        </div>
         <div class="search-bar">
           <svg class="icon-search" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/>
@@ -924,6 +933,10 @@ html.admin-page, body.admin-body {
           <button id="clearSearch" class="clear-btn" hidden aria-label="Effacer la recherche">&times;</button>
         </div>
       </div>
+
+      <!-- Étiquettes cliquables colorées : la couleur donne directement le sens du code couleur -->
+      <div class="chip-scroll" id="categoryChips" role="tablist" aria-label="Filtrer par catégorie"></div>
+      <div class="chip-scroll" id="statusChips" role="tablist" aria-label="Filtrer par statut"></div>
     </div>
   </div>
 
@@ -1108,7 +1121,7 @@ function loadData() {
           .map(rowToPlace)
           .filter(p => p.nom); // on ignore les lignes vides / sans nom
         console.log("[La Rémissa Map] Lieux chargés :", state.allPlaces.length);
-        buildFilterSelects();
+        buildFilterChips();
         renderStats();
         applyFilters(); // gère déjà le centrage : IDF par défaut si aucun filtre actif
       } catch (err) {
@@ -1220,8 +1233,8 @@ function initMap() {
 
   // Regroupement des marqueurs proches en clusters quand on dézoome
   state.markersLayer = L.markerClusterGroup({
-    maxClusterRadius: 35,          // plus petit = regroupe moins facilement les marqueurs proches
-    disableClusteringAtZoom: 16,   // à partir de ce zoom, tous les marqueurs s'affichent individuellement
+    maxClusterRadius: 22,          // encore plus petit : ne regroupe que les marqueurs vraiment très proches
+    disableClusteringAtZoom: 13,   // dès ce zoom (relativement large), tous les marqueurs s'affichent individuellement
     spiderfyOnMaxZoom: true,
     showCoverageOnHover: false,
   });
@@ -1360,7 +1373,7 @@ function closeModal() {
 /* ============================================================
    9. FILTRES (catégorie + statut) & RECHERCHE OUVERTE
    ============================================================ */
-function buildFilterSelects() {
+function buildFilterChips() {
   // Toutes les catégories réellement présentes (chaque lieu peut en avoir
   // plusieurs), aplaties et dédupliquées, dans l'ordre de la charte
   const allTags = [...new Set(state.allPlaces.flatMap(p => p.categories))];
@@ -1368,21 +1381,39 @@ function buildFilterSelects() {
   const extraCategories = allTags.filter(cat => cat && !CATEGORY_ORDER.includes(cat));
   const categories = [...presentCategories, ...extraCategories];
 
-  const categorySelect = document.getElementById("categorySelect");
-  categorySelect.innerHTML = `<option value="all">Catégorie</option>` +
-    categories.map(cat => `<option value="${escapeHtml(cat)}">${escapeHtml(cat)}</option>`).join("");
-  categorySelect.addEventListener("change", () => {
-    state.category = categorySelect.value;
-    applyFilters();
+  const catContainer = document.getElementById("categoryChips");
+  catContainer.innerHTML = `<button class="chip chip-all active" data-cat="all">Toutes catégories</button>` +
+    categories.map(cat => `
+      <button class="chip" data-cat="${escapeHtml(cat)}" style="color:${categoryColor(cat)}">
+        <span class="dot" style="background:${categoryColor(cat)}"></span>${escapeHtml(cat)}
+      </button>
+    `).join("");
+
+  catContainer.querySelectorAll(".chip").forEach(btn => {
+    btn.addEventListener("click", () => {
+      catContainer.querySelectorAll(".chip").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      state.category = btn.dataset.cat;
+      applyFilters();
+    });
   });
 
+  // Statuts
   const presentStatuses = STATUS_ORDER.filter(s => state.allPlaces.some(p => p.statut === s));
-  const statusSelect = document.getElementById("statusSelect");
-  statusSelect.innerHTML = `<option value="all">Statut</option>` +
-    presentStatuses.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join("");
-  statusSelect.addEventListener("change", () => {
-    state.status = statusSelect.value;
-    applyFilters();
+  const statusContainer = document.getElementById("statusChips");
+  statusContainer.innerHTML = `<button class="chip chip-all active" data-status="all">Tous statuts</button>` +
+    presentStatuses.map(s => {
+      const style = STATUS_STYLES[s];
+      return `<button class="chip" data-status="${escapeHtml(s)}" style="background:${style.bg};color:${style.text}">${escapeHtml(s)}</button>`;
+    }).join("");
+
+  statusContainer.querySelectorAll(".chip").forEach(btn => {
+    btn.addEventListener("click", () => {
+      statusContainer.querySelectorAll(".chip").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      state.status = btn.dataset.status;
+      applyFilters();
+    });
   });
 }
 
