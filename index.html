@@ -144,29 +144,29 @@ input { font-family: inherit; }
 /* Bandeau de statistiques */
 .stats-row {
   display: flex;
-  gap: 12px;
-  margin-top: 16px;
+  gap: 10px;
+  margin-top: 12px;
   overflow-x: auto;
   scrollbar-width: none;
   padding-bottom: 2px;
 }
 .stats-row::-webkit-scrollbar { display: none; }
 .stat-card {
-  flex: 1 1 150px;
-  min-width: 150px;
+  flex: 1 1 130px;
+  min-width: 130px;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: 14px 16px;
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
   box-shadow: var(--shadow-card);
 }
 .stat-label {
-  font-size: 12.5px;
+  font-size: 11.5px;
   font-weight: 600;
-  margin: 0 0 6px;
+  margin: 0 0 2px;
 }
 .stat-value {
-  font-size: 24px;
+  font-size: 19px;
   font-weight: 700;
   color: var(--color-text);
   font-family: 'Fraunces', serif;
@@ -276,13 +276,26 @@ input { font-family: inherit; }
 .view { display: none; height: 100%; }
 .view.active { display: block; }
 
-#mapView, #map { height: 100%; width: 100%; }
+#mapView { height: 100%; width: 100%; box-sizing: border-box; padding: 16px 24px 28px; }
+#map { height: 100%; width: 100%; border-radius: var(--radius-lg); overflow: hidden; }
 
 #listView {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   padding: 20px 24px 40px;
 }
+
+/* Mode "liste" : la page entière défile normalement (plus de panneau à
+   scroll interne bloqué à la hauteur du viewport) — activé/désactivé via
+   la classe .list-mode posée sur <html> par switchView(). */
+html.list-mode, html.list-mode body {
+  height: auto;
+  overflow: auto;
+}
+html.list-mode #app { height: auto; min-height: 100%; }
+html.list-mode .content { height: auto; }
+html.list-mode #listView { height: auto; overflow: visible; }
+
 .cards-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -443,44 +456,71 @@ input { font-family: inherit; }
   justify-content: center;
 }
 
+.modal-photo-wrap { margin-bottom: 16px; }
 .modal-photo {
   width: 100%;
-  aspect-ratio: 16 / 11;
+  max-width: 220px;
+  aspect-ratio: 4 / 3;
   object-fit: cover;
   display: block;
+  border-radius: var(--radius-md);
   background: linear-gradient(135deg, #f0f0f2, #e6e6ea);
 }
-.modal-body { padding: 18px 20px 24px; }
+.modal-photo.placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: #b3b3bc;
+  font-size: 12.5px;
+  font-weight: 500;
+}
+.modal-photo.placeholder svg { width: 28px; height: 28px; opacity: 0.7; }
+.modal-body { padding: 26px 26px 30px; }
 .modal-title {
   font-family: 'Fraunces', serif;
   font-weight: 600;
-  font-size: 21px;
-  margin: 0 0 10px;
+  font-size: 22px;
+  margin: 0 0 16px;
 }
-.modal-address {
-  font-size: 14px;
+.modal-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin: 18px 0 4px;
+}
+.modal-field-label {
+  font-size: 12px;
+  font-weight: 600;
   color: var(--color-text-soft);
-  margin: 10px 0 2px;
-  display: flex;
-  gap: 6px;
+  margin: 0 0 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
+.modal-field-value {
+  font-size: 14px;
+  color: var(--color-text);
+  margin: 0;
+  word-break: break-word;
+}
+.modal-field-value a { color: var(--color-primary); }
 .modal-date {
-  font-size: 12.5px;
-  color: #a9a9b2;
-  margin: 0 0 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin: 18px 0 4px;
+  line-height: 1.6;
 }
 .modal-description {
   font-size: 14.5px;
   line-height: 1.6;
   color: var(--color-text);
   white-space: pre-line;
-  margin: 0 0 20px;
+  margin: 14px 0 24px;
 }
-.modal-links {
-  font-size: 13.5px;
-  margin: 0 0 18px;
-}
-.modal-links a { color: var(--color-primary); }
 
 .btn-primary {
   display: flex;
@@ -1070,8 +1110,7 @@ function loadData() {
         console.log("[La Rémissa Map] Lieux chargés :", state.allPlaces.length);
         buildFilterSelects();
         renderStats();
-        applyFilters();
-        fitMapToPlaces(state.allPlaces); // cadrage initial une seule fois
+        applyFilters(); // gère déjà le centrage : IDF par défaut si aucun filtre actif
       } catch (err) {
         console.error("[La Rémissa Map] Erreur pendant le traitement des données :", err);
       }
@@ -1284,23 +1323,26 @@ function openModal(place) {
   const statusStyle = STATUS_STYLES[place.statut] || { bg: "#E2E8F0", text: "#475569" };
   const content = document.getElementById("modalContent");
 
+  const photoHtml = place.photo
+    ? `<img class="modal-photo" src="${escapeHtml(place.photo)}" alt="${escapeHtml(place.nom)}">`
+    : `<div class="modal-photo placeholder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10" r="1.5"/><path d="M21 16l-5-5-4 4-3-3-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>Pas de photo</div>`;
+
   content.innerHTML = `
-    ${place.photo
-      ? `<img class="modal-photo" src="${escapeHtml(place.photo)}" alt="${escapeHtml(place.nom)}">`
-      : ""
-    }
     <div class="modal-body">
       <h2 class="modal-title">${escapeHtml(place.nom)}</h2>
+      <div class="modal-photo-wrap">${photoHtml}</div>
       <div class="badge-row">
         ${categoryBadgesHtml(place)}
         ${place.statut ? `<span class="badge badge-status" style="background:${statusStyle.bg};color:${statusStyle.text}">${escapeHtml(place.statut)}</span>` : ""}
       </div>
-      ${place.adresse ? `<p class="modal-address">📍 ${escapeHtml(place.adresse)}</p>` : ""}
-      ${place.dateAjout ? `<p class="modal-date">Ajouté le ${escapeHtml(place.dateAjout)}</p>` : ""}
+      <div class="modal-info-grid">
+        ${place.adresse ? `<div><p class="modal-field-label">Adresse</p><p class="modal-field-value">${escapeHtml(place.adresse)}</p></div>` : ""}
+        ${place.site ? `<div><p class="modal-field-label">Site web</p><p class="modal-field-value"><a href="${escapeHtml(place.site)}" target="_blank" rel="noopener">${escapeHtml(place.site)}</a></p></div>` : ""}
+      </div>
+      ${place.dateAjout ? `<p class="modal-date">Date d'ajout<br>${escapeHtml(place.dateAjout)}</p>` : ""}
       ${place.infos ? `<p class="modal-description">${escapeHtml(place.infos)}</p>` : ""}
-      ${place.site ? `<p class="modal-links"><a href="${escapeHtml(place.site)}" target="_blank" rel="noopener">🔗 Site web</a></p>` : ""}
       ${place.urlMaps
-        ? `<a class="btn-primary" href="${escapeHtml(place.urlMaps)}" target="_blank" rel="noopener">Ouvrir dans Google Maps</a>`
+        ? `<a class="btn-primary" href="${escapeHtml(place.urlMaps)}" target="_blank" rel="noopener">↗ Ouvrir dans Google Maps</a>`
         : ""
       }
     </div>
@@ -1412,7 +1454,10 @@ function switchView(viewId) {
   document.querySelectorAll(".nav-tab").forEach(b => b.classList.remove("active"));
   document.querySelector(`.nav-tab[data-view="${viewId}"]`).classList.add("active");
 
-  // Leaflet a besoin d'un recalcul de taille quand son conteneur redevient visible
+  // La liste défile avec la page entière (pas de panneau à scroll interne) ;
+  // la carte, elle, a besoin d'une hauteur fixe pour s'afficher correctement.
+  document.documentElement.classList.toggle("list-mode", viewId === "listView");
+
   if (viewId === "mapView" && state.map) {
     setTimeout(() => state.map.invalidateSize(), 50);
   }
