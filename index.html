@@ -556,7 +556,7 @@ html.list-mode #listView { height: auto; overflow: visible; }
   color: var(--color-text-soft);
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  margin: 18px 0 4px;
+  margin: 18px 0 28px;
   line-height: 1.6;
 }
 .modal-description {
@@ -1192,7 +1192,7 @@ function rowToPlace(row) {
     photo: firstPhotoUrl(row["Photos"]),
     infos: (row["Informations"] || "").trim(),
     site: (row["Site web"] || "").trim(),
-    dateAjout: (row["Date d'ajout"] || "").trim(),
+    dateAjout: (row["Testé le"] || "").trim(),
     lat: Number.isFinite(lat) ? lat : null,
     lng: Number.isFinite(lng) ? lng : null,
   };
@@ -1388,7 +1388,7 @@ function openModal(place) {
         ${place.adresse ? `<div><p class="modal-field-label">Adresse</p><p class="modal-field-value">${escapeHtml(place.adresse)}</p></div>` : ""}
         ${place.site ? `<div><p class="modal-field-label">Site web</p><p class="modal-field-value"><a href="${escapeHtml(place.site)}" target="_blank" rel="noopener">${escapeHtml(place.site)}</a></p></div>` : ""}
       </div>
-      ${place.dateAjout ? `<p class="modal-date">Date d'ajout<br>${escapeHtml(place.dateAjout)}</p>` : ""}
+      <p class="modal-date">Testé le<br>${place.dateAjout ? escapeHtml(place.dateAjout) : "-"}</p>
       ${place.urlMaps
         ? `<a class="btn-primary" href="${escapeHtml(place.urlMaps)}" target="_blank" rel="noopener">↗ Ouvrir dans Google Maps</a>`
         : ""
