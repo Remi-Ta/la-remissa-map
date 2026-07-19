@@ -444,6 +444,22 @@ html.list-mode #listView { height: auto; overflow: visible; }
   gap: 5px;
 }
 .card-details-btn { font-size: 13.5px; padding: 10px 16px; }
+.btn-row { display: flex; gap: 8px; align-items: stretch; }
+.btn-row .btn-primary { flex: 1; }
+.btn-locate {
+  flex-shrink: 0;
+  width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-primary);
+  border-radius: var(--radius-md);
+  transition: background .12s ease;
+}
+.btn-locate svg { width: 19px; height: 19px; }
+.btn-locate:active { background: var(--color-primary-tint); }
 
 /* ---------- MODALE DE DÉTAILS ---------- */
 .modal-overlay {
@@ -1134,6 +1150,9 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
+// Icône pin réutilisée par le bouton "localiser sur la carte" (cartes + modale)
+const LOCATE_ICON_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s7-6.5 7-11a7 7 0 10-14 0c0 4.5 7 11 7 11z" stroke-linejoin="round"/><circle cx="12" cy="10" r="2.5"/></svg>`;
+
 /* ============================================================
    5. CHARGEMENT DES DONNÉES (data/lieux.csv -> objets)
    ============================================================ */
@@ -1317,6 +1336,19 @@ function fitMapToPlaces(places) {
   state.map.fitBounds(bounds, { padding: [30, 30], maxZoom: 13 });
 }
 
+// Bascule sur l'onglet Carte et centre la vue sur un lieu précis (zoom modéré,
+// pas trop serré, pour garder un peu de contexte autour du marqueur)
+function locateOnMap(place) {
+  if (!document.getElementById("modalOverlay").hidden) closeModal();
+  switchView("mapView");
+  if (state.map && place.lat !== null && place.lng !== null) {
+    // Attendu après le recalcul de taille de switchView (setTimeout 50ms)
+    setTimeout(() => {
+      state.map.setView([place.lat, place.lng], 15);
+    }, 80);
+  }
+}
+
 /* ============================================================
    7. LISTE (cartes façon Softr)
    ============================================================ */
@@ -1353,9 +1385,17 @@ function renderCards(places) {
         <h3 class="place-card-title">${escapeHtml(place.nom)}</h3>
         ${place.statut ? `<div class="badge-row"><span class="badge badge-status" style="background:${statusStyle.bg};color:${statusStyle.text}">${escapeHtml(place.statut)}</span></div>` : ""}
         ${place.adresse ? `<p class="place-card-address">📍 ${escapeHtml(place.adresse)}</p>` : ""}
-        <button type="button" class="btn-primary card-details-btn">↗ Détails</button>
+        <div class="btn-row">
+          <button type="button" class="btn-primary card-details-btn">↗ Détails</button>
+          <button type="button" class="btn-locate" title="Localiser sur la carte" aria-label="Localiser sur la carte">${LOCATE_ICON_SVG}</button>
+        </div>
       </div>
     `;
+
+    card.querySelector(".btn-locate").addEventListener("click", (e) => {
+      e.stopPropagation();
+      locateOnMap(place);
+    });
 
     card.addEventListener("click", () => openModal(place));
     frag.appendChild(card);
@@ -1389,12 +1429,17 @@ function openModal(place) {
         ${place.site ? `<div><p class="modal-field-label">Site web</p><p class="modal-field-value"><a href="${escapeHtml(place.site)}" target="_blank" rel="noopener">${escapeHtml(place.site)}</a></p></div>` : ""}
       </div>
       <p class="modal-date">Testé le<br>${place.dateAjout ? escapeHtml(place.dateAjout) : "-"}</p>
-      ${place.urlMaps
-        ? `<a class="btn-primary" href="${escapeHtml(place.urlMaps)}" target="_blank" rel="noopener">↗ Ouvrir dans Google Maps</a>`
-        : ""
-      }
+      <div class="btn-row">
+        ${place.urlMaps
+          ? `<a class="btn-primary" href="${escapeHtml(place.urlMaps)}" target="_blank" rel="noopener">↗ Ouvrir dans Google Maps</a>`
+          : ""
+        }
+        <button type="button" class="btn-locate" id="modalLocateBtn" title="Localiser sur la carte" aria-label="Localiser sur la carte">${LOCATE_ICON_SVG}</button>
+      </div>
     </div>
   `;
+
+  document.getElementById("modalLocateBtn").addEventListener("click", () => locateOnMap(place));
 
   document.getElementById("modalOverlay").hidden = false;
   document.body.style.overflow = "hidden";
