@@ -235,6 +235,21 @@ input { font-family: inherit; }
 .chip.active { border-color: currentColor; }
 .chip.chip-all.active { border-color: var(--color-text); }
 
+.toolbar-toggle-row { display: flex; justify-content: flex-end; }
+.toggle-resolved-link {
+  background: none;
+  border: none;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--color-primary);
+  cursor: pointer;
+  padding: 2px 0;
+}
+.toggle-resolved-link.active {
+  color: #a3a3ac;
+  text-decoration: line-through;
+}
+
 .search-bar {
   width: 260px;
   max-width: 100%;
@@ -277,6 +292,21 @@ input { font-family: inherit; }
 @media (max-width: 640px) {
   .toolbar-top-row { flex-direction: column; align-items: stretch; }
   .search-bar { width: 100%; }
+
+  /* Header et barre d'outils compactés au maximum : priorité à la carte */
+  .app-header { padding: 10px 14px 8px; }
+  .welcome-text { display: none; }
+  .stats-row { margin-top: 8px; gap: 6px; }
+  .stat-card { padding: 6px 10px; flex: 1 1 100px; min-width: 100px; }
+  .stat-value { font-size: 16px; }
+  .stat-label { font-size: 10.5px; }
+  .toolbar-panel { padding: 8px 14px; }
+  .toolbar-heading p { display: none; }
+  .toolbar-heading h2 { font-size: 15px; }
+  .chip { padding: 5px 10px; font-size: 11.5px; }
+
+  /* La carte s'étend au maximum, avec juste un mince espace autour */
+  #mapView { padding: 8px 8px 16px; }
 }
 
 /* ---------- CONTENU (carte / liste) ---------- */
@@ -937,6 +967,10 @@ html.admin-page, body.admin-body {
       <!-- Étiquettes cliquables colorées : la couleur donne directement le sens du code couleur -->
       <div class="chip-scroll" id="categoryChips" role="tablist" aria-label="Filtrer par catégorie"></div>
       <div class="chip-scroll" id="statusChips" role="tablist" aria-label="Filtrer par statut"></div>
+
+      <div class="toolbar-toggle-row">
+        <button type="button" id="toggleResolvedBtn" class="toggle-resolved-link">Masquer les lieux faits et non validés</button>
+      </div>
     </div>
   </div>
 
@@ -1039,7 +1073,7 @@ const DEFAULT_CATEGORY_COLOR = "#4A5568";
 const STATUS_STYLES = {
   "À faire":   { bg: "#E2E8F0", text: "#475569" },
   "Approuvé":  { bg: "#A7F3D0", text: "#065F46" },
-  "Bof bof":   { bg: "#FEF3C7", text: "#92400E" },
+  "Surcoté":   { bg: "#FEF3C7", text: "#92400E" },
 };
 const STATUS_ORDER = Object.keys(STATUS_STYLES);
 
@@ -1060,6 +1094,7 @@ const state = {
   category: "all",   // "all" ou une des clés de CATEGORY_COLORS
   status: "all",     // "all" ou une des clés de STATUS_STYLES
   search: "",
+  hideResolved: false, // masque les lieux "faits" (Approuvé/Surcoté), ne garde que "À faire"
   map: null,
   markersLayer: null,
 };
@@ -1425,8 +1460,8 @@ function renderStats() {
   const approuves = counts["Approuvé"] || 0;
   const taux = total > 0 ? ((approuves / total) * 100).toFixed(1) : "0.0";
 
-  const statLabels = { "À faire": "À faire", "Approuvé": "Approuvés", "Bof bof": "Bof bof" };
-  const statColors = { "À faire": STATUS_STYLES["À faire"].text, "Approuvé": STATUS_STYLES["Approuvé"].text, "Bof bof": STATUS_STYLES["Bof bof"].text };
+  const statLabels = { "À faire": "À faire", "Approuvé": "Approuvés", "Surcoté": "Surcoté" };
+  const statColors = { "À faire": STATUS_STYLES["À faire"].text, "Approuvé": STATUS_STYLES["Approuvé"].text, "Surcoté": STATUS_STYLES["Surcoté"].text };
 
   const cards = STATUS_ORDER.map(s => `
     <div class="stat-card">
@@ -1449,6 +1484,7 @@ function applyFilters() {
   state.filtered = state.allPlaces.filter(place => {
     if (state.category !== "all" && !place.categories.includes(state.category)) return false;
     if (state.status !== "all" && place.statut !== state.status) return false;
+    if (state.hideResolved && place.statut !== "À faire") return false;
 
     if (term) {
       const haystack = normalize(`${place.nom} ${place.adresse} ${place.infos}`);
@@ -1463,10 +1499,10 @@ function applyFilters() {
   renderMarkers(state.filtered);
   renderCards(state.filtered);
 
-  // Zoom sur les résultats si un filtre (recherche, catégorie ou statut) est
-  // actif ; sinon (tout affiché) on revient à la vue par défaut Île-de-France.
+  // Zoom sur les résultats si un filtre (recherche, catégorie, statut ou le
+  // masquage des lieux faits) est actif ; sinon on revient à la vue Île-de-France.
   if (state.map) {
-    const filtersActive = term !== "" || state.category !== "all" || state.status !== "all";
+    const filtersActive = term !== "" || state.category !== "all" || state.status !== "all" || state.hideResolved;
     if (filtersActive) {
       fitMapToPlaces(state.filtered);
     } else {
@@ -1518,6 +1554,17 @@ function init() {
     clearBtn.hidden = true;
     applyFilters();
     searchInput.focus();
+  });
+
+  // Bascule "masquer les lieux faits et non validés" (ne garde que "À faire")
+  const toggleResolvedBtn = document.getElementById("toggleResolvedBtn");
+  toggleResolvedBtn.addEventListener("click", () => {
+    state.hideResolved = !state.hideResolved;
+    toggleResolvedBtn.textContent = state.hideResolved
+      ? "Afficher les lieux faits et non validés"
+      : "Masquer les lieux faits et non validés";
+    toggleResolvedBtn.classList.toggle("active", state.hideResolved);
+    applyFilters();
   });
 
   // Onglets bas de page
