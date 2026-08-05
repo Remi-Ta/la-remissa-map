@@ -171,6 +171,11 @@ input { font-family: inherit; }
   color: var(--color-text);
   font-family: 'Fraunces', serif;
 }
+.stat-sub {
+  font-size: 10.5px;
+  color: var(--color-text-soft);
+  margin: 2px 0 0;
+}
 
 /* ---------- BARRE D'OUTILS (titre section + recherche + filtres) ---------- */
 .toolbar-panel {
@@ -198,6 +203,12 @@ input { font-family: inherit; }
   font-size: 18px;
   font-weight: 600;
   margin: 0 0 2px;
+}
+.visible-count {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-soft);
 }
 .toolbar-heading p {
   font-size: 13px;
@@ -967,7 +978,7 @@ html.admin-page, body.admin-body {
     <div class="toolbar-inner">
       <div class="toolbar-top-row">
         <div class="toolbar-heading">
-          <h2>Tous les lieux</h2>
+          <h2>Tous les lieux <span class="visible-count" id="visibleCount"></span></h2>
           <p>Recherchez, filtrez et ouvrez une fiche pour voir les détails.</p>
         </div>
         <div class="search-bar">
@@ -1503,7 +1514,14 @@ function renderStats() {
   const counts = {};
   STATUS_ORDER.forEach(s => { counts[s] = state.allPlaces.filter(p => p.statut === s).length; });
   const approuves = counts["Approuvé"] || 0;
-  const taux = total > 0 ? ((approuves / total) * 100).toFixed(1) : "0.0";
+  const surcotes = counts["Surcoté"] || 0;
+  const faits = approuves + surcotes; // "lieux faits" = déjà traités, qu'ils soient approuvés ou non
+
+  // Taux d'approbation : uniquement parmi les lieux faits (pas sur le total,
+  // sinon les lieux encore "à faire" fausseraient le taux à la baisse)
+  const tauxApprobation = faits > 0 ? ((approuves / faits) * 100).toFixed(1) : "0.0";
+  // % de lieux déjà faits par rapport à l'ensemble des lieux
+  const faitsPct = total > 0 ? ((faits / total) * 100).toFixed(1) : "0.0";
 
   const statLabels = { "À faire": "À faire", "Approuvé": "Approuvés", "Surcoté": "Surcoté" };
   const statColors = { "À faire": STATUS_STYLES["À faire"].text, "Approuvé": STATUS_STYLES["Approuvé"].text, "Surcoté": STATUS_STYLES["Surcoté"].text };
@@ -1516,7 +1534,8 @@ function renderStats() {
   `).join("") + `
     <div class="stat-card">
       <p class="stat-label" style="color:${categoryColor(CATEGORY_ORDER[3]) /* bleu Cul'ture, cohérent avec la charte */}">Taux d'approbation Rémissa</p>
-      <p class="stat-value">${taux.replace(".", ",")} %</p>
+      <p class="stat-value">${tauxApprobation.replace(".", ",")} %</p>
+      <p class="stat-sub">Lieux faits : ${faits} - ${faitsPct.replace(".", ",")} %</p>
     </div>
   `;
 
@@ -1543,6 +1562,10 @@ function applyFilters() {
 
   renderMarkers(state.filtered);
   renderCards(state.filtered);
+
+  // Compteur "X/Y lieux visibles", commun à la carte et à la liste
+  const countEl = document.getElementById("visibleCount");
+  if (countEl) countEl.textContent = `(${state.filtered.length}/${state.allPlaces.length})`;
 
   // Zoom sur les résultats si un filtre (recherche, catégorie, statut ou le
   // masquage des lieux faits) est actif ; sinon on revient à la vue Île-de-France.
