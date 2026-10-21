@@ -977,15 +977,22 @@ function categoryColor(cat) {
   return CATEGORY_COLORS[cat] || DEFAULT_CATEGORY_COLOR;
 }
 
-// Récupère la première URL valide d'une cellule "Photos".
-// Formats rencontrés : une URL brute, plusieurs URL séparées par une virgule /
-// un espace / un retour à la ligne, ou le format Softr "nomfichier.png (https://...)".
-// On cherche donc n'importe quelle sous-chaîne commençant par http(s):// dans le texte,
-// peu importe ce qui l'entoure (parenthèses, virgules, etc.).
-function firstPhotoUrl(raw) {
-  if (!raw) return null;
-  const match = raw.match(/https?:\/\/[^\s")]+/i);
-  return match ? match[0] : null;
+// Résout la cellule "Photos" en une image à afficher. Formats acceptés :
+//  - une URL (ou le format Softr "nom.png (https://...)")         -> utilisée telle quelle
+//  - un nom de fichier du dossier photos/ avec extension ("12.jpg") -> photos/12.jpg
+//  - un numéro ou un nom sans extension ("12")                      -> essaie photos/12.jpg,
+//    puis .jpeg, .png, .webp (sensible à la casse sur GitHub Pages : tout en minuscules)
+const PHOTO_EXTS = ["jpg", "jpeg", "png", "webp"];
+function resolvePhoto(raw) {
+  const empty = { photo: null, photoAlt: [] };
+  if (!raw) return empty;
+  const url = raw.match(/https?:\/\/[^\s")]+/i);
+  if (url) return { photo: url[0], photoAlt: [] };
+  const name = raw.split(/[\n,;]+/)[0].trim();
+  if (!name) return empty;
+  if (/\.(jpe?g|png|webp|gif|avif)$/i.test(name)) return { photo: "photos/" + encodeURI(name), photoAlt: [] };
+  const base = "photos/" + encodeURI(name);
+  return { photo: base + "." + PHOTO_EXTS[0], photoAlt: PHOTO_EXTS.slice(1).map(e => base + "." + e) };
 }
 
 function escapeHtml(str) {
@@ -997,6 +1004,12 @@ function escapeHtml(str) {
 // Si une photo ne se charge pas (lien expiré, hébergeur indisponible…), on la
 // remplace par l'encart "Pas de photo" au lieu d'afficher une image cassée
 function photoFallback(img) {
+  const alts = (img.dataset.alt || "").split("|").filter(Boolean);
+  if (alts.length) {            // photo référencée par un numéro : on essaie l'extension suivante
+    img.dataset.alt = alts.slice(1).join("|");
+    img.src = alts[0];
+    return;
+  }
   const div = document.createElement("div");
   div.className = img.className + " placeholder";
   div.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10" r="1.5"/><path d="M21 16l-5-5-4 4-3-3-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>Pas de photo';
@@ -1061,7 +1074,7 @@ function rowToPlace(row) {
     statut: (row["Statut"] || "").trim(),
     adresse: (row["Adresse"] || "").trim(),
     urlMaps: (row["URL Google Maps"] || "").trim(),
-    photo: firstPhotoUrl(row["Photos"]),
+    ...resolvePhoto(row["Photos"]),
     infos: (row["Informations"] || "").trim(),
     site: (row["Site web"] || "").trim(),
     dateAjout: (row["Testé le"] || "").trim(),
@@ -1338,7 +1351,7 @@ function renderCards(places) {
     card.innerHTML = `
       <div class="place-card-photo-wrap">
         ${place.photo
-          ? `<img class="place-card-photo" src="${escapeHtml(place.photo)}" alt="${escapeHtml(place.nom)}" loading="lazy" referrerpolicy="no-referrer" onerror="photoFallback(this)">`
+          ? `<img class="place-card-photo" src="${escapeHtml(place.photo)}" alt="${escapeHtml(place.nom)}" loading="lazy" referrerpolicy="no-referrer" data-alt="${escapeHtml(place.photoAlt.join("|"))}" onerror="photoFallback(this)">`
           : `<div class="place-card-photo placeholder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10" r="1.5"/><path d="M21 16l-5-5-4 4-3-3-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>Pas de photo</div>`
         }
         <div class="card-badges-overlay">${cardCategoryOverlayHtml(place)}</div>
@@ -1374,7 +1387,7 @@ function openModal(place) {
   const content = document.getElementById("modalContent");
 
   const photoHtml = place.photo
-    ? `<img class="modal-photo" src="${escapeHtml(place.photo)}" alt="${escapeHtml(place.nom)}" referrerpolicy="no-referrer" onerror="photoFallback(this)">`
+    ? `<img class="modal-photo" src="${escapeHtml(place.photo)}" alt="${escapeHtml(place.nom)}" referrerpolicy="no-referrer" data-alt="${escapeHtml(place.photoAlt.join("|"))}" onerror="photoFallback(this)">`
     : `<div class="modal-photo placeholder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10" r="1.5"/><path d="M21 16l-5-5-4 4-3-3-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>Pas de photo</div>`;
 
   content.innerHTML = `
